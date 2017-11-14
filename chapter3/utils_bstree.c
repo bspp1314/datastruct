@@ -1,7 +1,14 @@
 #include <malloc.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include"utils_bstree.h"
+#define sfree(ptr)                                                             \
+	do {                                                                         \
+		free(ptr);                                                                 \
+		(ptr) = NULL;                                                              \
+	} while (0)
+
 
 static void free_node(c_bs_node_t *node)
 {
@@ -31,6 +38,19 @@ static c_bs_node_t *find(c_bs_tree_t *tree,const void *key)
 	}
 
 	return NULL;
+}
+static c_bs_node_t *find_min(c_bs_node_t *node)
+{
+	c_bs_node_t *node_min;
+
+	assert(node != NULL);
+
+	node_min = node;
+
+	while(node_min->left != NULL)
+		node_min = node_min->left;
+
+	return node_min;
 }
 c_bs_tree_t *c_bs_create(int (*compare)(const void *, const void *))
 {
@@ -109,17 +129,13 @@ int c_bs_insert(c_bs_tree_t *tree,void *key,void *value)
 	}
 	return 1;
 }
-int c_bs_get(c_bs_tree_t *tree,const void *key,void **key)
+int c_bs_get(c_bs_tree_t *tree,const void *key,void **value)
 {
 	c_bs_node_t *node;
 
-	if(tree == NULL)
-	{
-		printf("this tree is NULL.\n");
-		return -1;
-	}
+	assert(tree != NULL);
 
-	node = search(tree,key);
+	node = find(tree,key);
 	if(node == NULL || value == NULL)
 	{
 		return -1;
@@ -127,9 +143,84 @@ int c_bs_get(c_bs_tree_t *tree,const void *key,void **key)
 
 	*value = node->value;
 	return 0;
+}
+int c_bs_remove(c_bs_tree_t *tree,const void *key)
+{
+	c_bs_node_t *node;
+	c_bs_node_t *node_min;
 
-	
+	assert(tree != NULL);
 
+	node = find(tree,key);
+	if(node == NULL)
+	{
+		return 0;
+	}
+
+	if(node->left != NULL && node->right != NULL)
+	{
+		node_min = find_min(node);
+
+		node_min->parent->left = NULL;
+
+		node_min->parent = node->parent;
+
+		if(node->parent == NULL)
+			tree->root = node_min;
+		else
+		{
+			if(node->parent->left == node)
+				node->parent->left = node_min;
+			else
+				node->parent->right == node_min;
+		}
+
+		node->left->parent = node_min;
+		node->right->parent = node_min;
+		node_min->left = node->left;
+		node_min->right = node->right;
+
+		sfree(node);
+	}else
+	{
+		if(node->left == NULL)
+		{
+			node->right->parent = node->parent;
+			if(node->parent == NULL)
+				tree->root = node->right;
+			else
+			{
+				if(node->parent->left == node)
+					node->parent->left = node->right;
+				else
+					node->parent->right = node->right;
+			}
+			sfree(node);
+
+		}else if(node->right == NULL)
+		{
+			node->left->parent = node->parent;
+
+			if(node->parent == NULL)
+				tree->root == node->left;
+			else
+			{
+				if(node->parent->left = node)
+					node->parent->left = node->left;
+				else
+					node->parent->right = node->left;
+			}
+
+			sfree(node);
+		}else
+		{
+			if(node->parent == NULL)
+				tree->root == NULL;
+			sfree(node);
+		}
+
+	}
+	return 0;	
 }
 int main()
 {
