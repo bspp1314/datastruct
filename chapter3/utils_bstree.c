@@ -13,6 +13,25 @@ static void free_node(c_bs_node_t *node)
 	if(node->right != NULL)
 		free_node(node->right);
 }
+static c_bs_node_t *find(c_bs_tree_t *tree,const void *key)
+{
+	c_bs_node_t *node;
+	int cmp = 0;
+
+	node = tree->root;
+	while(node != NULL)
+	{
+		cmp = tree->compare(node->key,key);
+		if(cmp == 0)
+			return node;
+		else if(cmp < 0)//节点比关键字小
+			node = node->right;
+		else if(cmp > 0)
+			node = node->left;
+	}
+
+	return NULL;
+}
 c_bs_tree_t *c_bs_create(int (*compare)(const void *, const void *))
 {
 	c_bs_tree_t *tree;
@@ -88,8 +107,29 @@ int c_bs_insert(c_bs_tree_t *tree,void *key,void *value)
 			}
 		}
 	}
-
 	return 1;
+}
+int c_bs_get(c_bs_tree_t *tree,const void *key,void **key)
+{
+	c_bs_node_t *node;
+
+	if(tree == NULL)
+	{
+		printf("this tree is NULL.\n");
+		return -1;
+	}
+
+	node = search(tree,key);
+	if(node == NULL || value == NULL)
+	{
+		return -1;
+	}
+
+	*value = node->value;
+	return 0;
+
+	
+
 }
 int main()
 {

@@ -1,3 +1,5 @@
+#ifndef UTILS_BSTREE_H
+#define UTILS_BSTREE_H
 struct c_bs_node_s
 {
 	void *key;
@@ -17,6 +19,10 @@ struct c_bs_tree_s
 	int size;
 
 };
-
 typedef struct c_bs_tree_s c_bs_tree_t;
+c_bs_tree_t *c_bs_create(int (*compare)(const void *, const void *));
+void c_bs_destroy(c_bs_tree_t *tree);
+int c_bs_insert(c_bs_tree_t *tree,void *key,void *value);
+
+#endif
 
