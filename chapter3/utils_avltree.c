@@ -204,7 +204,64 @@ static void rebalance(c_avl_tree_t *tree, c_avl_node_t *node)
 		node = node->parent;
 	}
 }
+static c_avl_node_t *search(c_avl_tree_t *tree,const void *key)
+{
+		c_avl_node_t *node;
+		int cmp;
 
+		node = tree->root;
+		while(node != NULL)
+		{
+			cmp = tree->compare(node->key,key);
+			if(cmp == 0)
+				break;
+			else if(cmp < 0) // node->key < key
+				node = node->right;
+			else
+				node = node->left;//node->key > key;
+		}
+
+		return node;
+}
+static c_avl_node_t *c_avl_node_prev(c_avl_node_t *node)
+{
+  c_avl_node_t *r_node; //return node;
+
+	if(node == NULL)
+		return NULL;
+	
+	if(node->left != NULL)//左子树里面的最大值
+	{
+		r_node = node->left;
+		while(r_node->right != NULL)
+			r_node = r_node->right;
+	}
+	return r_node;
+}
+static c_avl_node_t *c_avl_node_next(c_avl_node_t *node)
+{
+	c_avl_node_t *r_node;
+	if(node == NULL)
+		return NULL;
+
+	if(node->right != NULL)//右子树里面最小的节点
+	{
+		r_node = node->right;
+		while(r_node->left != NULL)
+			r_node = r_node->right;
+	}
+	return r_node;
+}
+//static void remove(c_avl_tree_t tree,c_avl_node_t *node)
+//{
+//	assert(tree != NULL && node != NULL);
+//
+//	if((node->left != NULL) && (node->right != NULL))//have two child tree
+//	{
+//		c_avl_node_t *replace; //replace node
+//		if(calc_balance(node) > 0) /* left subtree is higher*/
+//	}
+//}
 c_avl_tree_t *c_avl_create(int (*compare)(const void *,const void *))
 {
 	c_avl_tree_t *tree;
