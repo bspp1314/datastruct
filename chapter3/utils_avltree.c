@@ -52,14 +52,11 @@ static void free_node(c_avl_node_t *node)
 	free(node);
 }
 
-/*         (x)             (y)
- *        /   \           /   \
- *	3	 (y)    /\ 1       /\    (x) 2
- *    /   \  /_c\  ==>  / a\  /   \
- *   /\   /\           /__2_\/\   /\
- *  / a\ /1b\               /1b\ /1c\
- * /_2___\
- *  c > x > b
+/*         (x)                            (y)
+ *        /   \                          /   \
+ *    (3y)     (1c)                   (2a)    (2x) 
+ *   /    \                                  /    \
+ * (2a)    (1b)                            1b     1c
  *  右旋
  *
  */
@@ -94,15 +91,11 @@ static c_avl_node_t *rotate_right(c_avl_tree_t *tree, c_avl_node_t *x) {
 	return y;
 }
 /*
- *    (x)                   (y)
- *   /   \                 /   \
- *  /\ 1  (y) 3         (x) 2  /\ 2
- * /1a\  /   \   ==>   /   \  / c\
- *      /\   /\       /\   /\/____\
- *     /1b\ / c\     /1a\ /1b\
- *         /2___\
- *  b > x > a
- *  
+ *    (x)                        (y)             
+ *   /   \                      /   \
+ *(1a)    (3y)              (2x)		 (2c)
+ *        /   \            /    \
+ *       (1b)  (2c)      1a     1b 
  */
 static c_avl_node_t *rotate_left(c_avl_tree_t *tree,c_avl_node_t *x)
 {
