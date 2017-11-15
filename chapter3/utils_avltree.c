@@ -106,14 +106,14 @@ static c_avl_node_t *rotate_left(c_avl_tree_t *tree,c_avl_node_t *x)
 	y->height = calc_height(x);
 	return y;
 }
-/*         (x)                 (x)                           (x)
- *        /   \               /   \             在右旋      /   \
- *	3	 (y)    /\ 1        3  (z)  (d) 1        ======>     y 2   x 2
- *    /   \  /_d\     ==>   /   \                         / \   / \
- *   /\		(z) 2        2  (y)  (c1)                      1a  1b 1c 1d
- *  /1a\ /   \           /   a    
- *      /\   /\         /\   /\
- *     /1b\ /1c\       /1a\ /1b\
+/*         (x)                     (x)                         (z)
+ *        /   \                   /   \                       /   \
+ *      (3y) (1d)               (3z)  (1d)                   y     x
+ *     /   \           left    /  \         right           / \   / \
+ *   (1a)  (2z)      ======> (2y) (1c)    ==============>  a   b  c  d
+ *         / \              /   \
+ *      (1b)  (1c)         (1a) (ab)
+ *
  *
  *  先右旋,再左旋
  *  x的平衡因子等于-2,且其左子树的平衡因子在[1,2] 区间
@@ -123,15 +123,15 @@ static c_avl_node_t *rotate_left_right(c_avl_tree_t *tree,c_avl_node_t *x)
 	rotate_left(tree,x->left);
 	return rotate_right(tree,x);
 }
-/*       (x)                       (x)
- *      /   \                     /   \
- *     /\    (y)                (1a)  (z)
- *    /a_\  /   \  ==========>        /
- *        (z)   /\
- *       /   \ /1d\
- *      /\   /\
- *     /1b\ /1c\
+/*       (x)                        (x)                           (z)                         
+ *      /   \        right         /   \            right        /   \
+ *  (1a)    (3y)      ====>    (1a)    (3z)     ============>   x     y
+ *          /   \                    /    \                    / \   / \
+ *      (2z)    (1d)             (1b)      (2y)               a   b c   d
+ *      /  \                              /    \
+ *  (1b)    (1c)                      (1c)      (1d)
  *先左旋,在右旋
+ * x的平衡因子等于2,且其右子树的平衡因子在[-1,-2] 区间
  */
 static a_avl_node_t *rotate_right_left(c_avl_tree_t *tree,c_avl_node_t *x)
 {
