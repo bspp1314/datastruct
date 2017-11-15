@@ -5,12 +5,13 @@ struct c_avl_node_s
 {
 	void *key;
 	void *value;
+	int height;
 
 	struct c_avl_node_s *left;
 	struct c_avl_node_s *right;
 	struct c_avl_node_s *parent;
-}
-struct c_avl_node_s c_avl_node_t;
+};
+typedef struct c_avl_node_s c_avl_node_t;
 
 struct c_avl_tree_s
 {
