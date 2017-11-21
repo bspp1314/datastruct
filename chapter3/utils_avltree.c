@@ -206,30 +206,30 @@ static void rebalance(c_avl_tree_t *tree, c_avl_node_t *node)
 }
 static c_avl_node_t *search(c_avl_tree_t *tree,const void *key)
 {
-		c_avl_node_t *node;
-		int cmp;
+	c_avl_node_t *node;
+	int cmp;
 
-		node = tree->root;
-		while(node != NULL)
-		{
-			cmp = tree->compare(node->key,key);
-			if(cmp == 0)
-				break;
-			else if(cmp < 0) // node->key < key
-				node = node->right;
-			else
-				node = node->left;//node->key > key;
-		}
+	node = tree->root;
+	while(node != NULL)
+	{
+		cmp = tree->compare(node->key,key);
+		if(cmp == 0)
+			break;
+		else if(cmp < 0) // node->key < key
+			node = node->right;
+		else
+			node = node->left;//node->key > key;
+	}
 
-		return node;
+	return node;
 }
 static c_avl_node_t *c_avl_node_prev(c_avl_node_t *node)
 {
-  c_avl_node_t *r_node; //return node;
+	c_avl_node_t *r_node; //return node;
 
 	if(node == NULL)
 		return NULL;
-	
+
 	if(node->left != NULL)//左子树里面的最大值
 	{
 		r_node = node->left;
@@ -252,16 +252,84 @@ static c_avl_node_t *c_avl_node_next(c_avl_node_t *node)
 	}
 	return r_node;
 }
-//static void remove(c_avl_tree_t tree,c_avl_node_t *node)
-//{
-//	assert(tree != NULL && node != NULL);
-//
-//	if((node->left != NULL) && (node->right != NULL))//have two child tree
-//	{
-//		c_avl_node_t *replace; //replace node
-//		if(calc_balance(node) > 0) /* left subtree is higher*/
-//	}
-//}
+static int _remove(c_avl_tree_t *tree,c_avl_node_t *node)
+{
+	assert((tree != NULL) && (node != NULL));
+
+	if((node->left != NULL) && (node->right != NULL))//have two child tree
+	{
+		c_avl_node_t *r_node; //replace node
+		if(calc_balance(node) > 0)/* left subtree is higher */
+		{
+			assert(node->left != NULL);
+			r_node = c_avl_node_prev(node);//node节点左子树方向的最大值
+		}else
+		{
+			assert(node->right != NULL);
+			r_node = c_avl_node_next(node);//node节点右子树方向的最小值
+		}
+
+		assert((r_node->right == NULL) || (r_node->left == NULL));
+		node->key = r_node->key;
+		node->value = r_node->value;
+
+		node = r_node;
+	}
+
+	assert((node->left == NULL) || node->right == NULL);
+	assert(node->parent == NULL || node->parent->left == node || node->parent->right == node);
+
+	if((node->left == NULL) && node->right == NULL)
+	{
+		if(node->parent == NULL)
+		{
+			assert(tree->root == node);
+			tree->root = NULL;
+		}else
+		{
+			if(node->parent->left == node)
+				node->parent->left = NULL;
+			else
+				node->parent->right = NULL;
+
+			rebalance(tree,node->parent);
+		}
+		free_node(node);
+	}else if((node->left == NULL))
+	{
+		assert(calc_balance(node) == -1);
+		if(node->parent == NULL)
+		{
+			assert(tree->root == node);
+			tree->root = node->right;
+		}else
+		{
+			if(node->parent->left == node)
+				node->parent->left = node->right;
+			else
+				node->parent->right == node->right;
+			rebalance(tree,node);
+		}
+			free_node(node);
+	}else if((node->right == NULL))
+	{
+		assert(calc_balance(node) == 1);
+		if(node->parent == NULL)
+		{
+			assert(tree->root == node);
+			tree->root = node->left;
+		}else
+		{
+			if(node->parent->left == node)
+				node->parent->left = node-> left;
+			else
+				node->parent->right = node->right;
+			rebalance(tree,node);
+		}
+		free_node(node);
+	}
+	return 0;
+}
 c_avl_tree_t *c_avl_create(int (*compare)(const void *,const void *))
 {
 	c_avl_tree_t *tree;
@@ -352,6 +420,82 @@ int c_avl_insert(c_avl_tree_t *tree,void *key,void *value)
 	verify_tree(tree->root);
 	tree->size++;
 	return 1;
+}
+int c_avl_remove(c_avl_tree_t *tree,const void *key)
+{
+	c_avl_node_t *node;
+
+	assert(tree != NULL);
+
+	node = search(tree,key);
+	if(node == NULL)
+		return -1;
+
+	
+	_remove(tree,node);
+	verify_tree(tree->root);
+	tree->size--;
+	
+	return 0;
+}
+int c_avl_get(c_avl_tree_t *tree, const void *key, void **value)
+{ 
+	c_avl_node_t *node;
+	
+	assert(tree != NULL);
+
+	node = search(tree,key);
+	if(node == NULL)
+		return -1;
+
+	if(value != NULL)
+		*value = node->value;
+
+	return 0;
+}
+C_AVL_ITERATOR_S *c_avl_get_iterator(C_AVL_TREE_S *psTree)
+{
+	C_AVL_ITERATOR_S *psIter;
+
+	if(psTree == NULL)
+		return NULL;
+
+	psIter = (C_AVL_ITERATOR_S *)malloc(sizeof(C_AVL_ITERATOR_S));
+	if(psIter == NULL)
+	{
+		printf("Out of space .\n");
+		return NULL;
+	}
+	psIter->tree = psTree;
+	psIter->node = NULL;
+
+	return psIter;
+}
+int c_avl_iterator_next(C_AVL_ITERATOR_S *psIter,void **ppvKey,void **ppvValue)
+{
+	C_AVL_NODE_S *psNode;
+
+	if((psIter == NULL) || ppvKey == NULL || ppvKey == NULL)
+		return -1;
+
+	if(psIter->node == NULL)
+	{
+		for(psNode == psIter->tree->root;psNode != NULL; psNode = psNode->left)
+			if(psNode->left == NULL)
+				break;
+		psIter->node = psNode;
+	}else
+	{
+		psNode = c_avl_node_next(psIter->node);
+	}
+
+	if(psNode == NULL)
+		return -1;
+
+	psIter->node = psNode;
+	*ppvKey = psNode->key;
+	*ppvValue = psNode->value;
+
 }
 
 int main()
