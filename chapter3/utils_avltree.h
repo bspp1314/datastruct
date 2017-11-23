@@ -40,4 +40,10 @@ void c_avl_destory(c_avl_tree_t *tree);
 int c_avl_remove(c_avl_tree_t *tree,const void *key);
 int c_avl_insert(c_avl_tree_t *tree,void *key,void *value);
 
+ c_avl_iterator_t *c_avl_get_iterator(c_avl_tree_t *tree);
+ int c_avl_iterator_next(c_avl_iterator_t *iter, void **key, void **value);
+ int c_avl_iterator_prev(c_avl_iterator_t *iter, void **key, void **value);
+ void c_avl_iterator_destroy(c_avl_iterator_t *iter);
+int c_avl_size(c_avl_tree_t *t);
+
 #endif

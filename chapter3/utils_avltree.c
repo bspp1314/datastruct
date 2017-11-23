@@ -223,28 +223,38 @@ static c_avl_node_t *search(c_avl_tree_t *tree,const void *key)
 
 	return node;
 }
-static c_avl_node_t *c_avl_node_prev(c_avl_node_t *node)
-{
-	c_avl_node_t *r_node; //return node;
 
-	if(node == NULL)
-		return NULL;
-
-	if(node->left != NULL)//左子树里面的最大值
-	{
-		r_node = node->left;
-		while(r_node->right != NULL)
-			r_node = r_node->right;
-	}
-	return r_node;
-}
+//中序遍历(左中右)
 static c_avl_node_t *c_avl_node_next(c_avl_node_t *node)
 {
 	c_avl_node_t *r_node;
 	if(node == NULL)
 		return NULL;
+	/* 向上回溯，直到该节点的父节点的左节点是其身 */
+	if(node->right == NULL)
+	{
+		r_node = node->parent;
+		while((r_node != NULL) && (r_node->parent != NULL))
+		{
+			if(r_node->left == node)
+				break;
 
-	if(node->right != NULL)//右子树里面最小的节点
+			node = r_node;
+			r_node = node->parent;
+		}
+		/*
+		 * next is null
+		 * */
+		if((r_node == NULL) || (r_node->left != node))
+		{
+			assert((r_node == NULL) || (r_node->left != node));
+			return NULL;
+		}else
+		{
+			assert((r_node->left == node));
+			return r_node;
+		}
+	}else
 	{
 		r_node = node->right;
 		while(r_node->left != NULL)
@@ -252,6 +262,41 @@ static c_avl_node_t *c_avl_node_next(c_avl_node_t *node)
 	}
 	return r_node;
 }
+
+static c_avl_node_t *c_avl_node_prev(c_avl_node_t *node)
+{
+	c_avl_node_t *r_node; //return node;
+
+	if(node == NULL)
+		return NULL;
+	if(node->left == NULL)
+	{
+		r_node = node->parent;
+		while(r_node != NULL && r_node->parent != NULL)
+		{
+			if(r_node->right == r_node)
+				break;
+			node =	r_node;
+			r_node = node->parent;
+		}
+
+		if(r_node == NULL || r_node->right != node)
+		{
+			assert((r_node == NULL) || (r_node->parent == NULL));
+			return NULL;
+		}else{
+			assert(r_node->right == NULL);
+			return r_node;
+		}
+	}else//左子树里面的最大值
+	{
+		r_node = node->left;
+		while(r_node->right != NULL)
+			r_node = r_node->right;
+	}
+	return r_node;
+}/*逆中序遍历 右中左*/
+
 static int _remove(c_avl_tree_t *tree,c_avl_node_t *node)
 {
 	assert((tree != NULL) && (node != NULL));
@@ -310,7 +355,7 @@ static int _remove(c_avl_tree_t *tree,c_avl_node_t *node)
 				node->parent->right == node->right;
 			rebalance(tree,node);
 		}
-			free_node(node);
+		free_node(node);
 	}else if((node->right == NULL))
 	{
 		assert(calc_balance(node) == 1);
@@ -431,17 +476,17 @@ int c_avl_remove(c_avl_tree_t *tree,const void *key)
 	if(node == NULL)
 		return -1;
 
-	
+
 	_remove(tree,node);
 	verify_tree(tree->root);
 	tree->size--;
-	
+
 	return 0;
 }
 int c_avl_get(c_avl_tree_t *tree, const void *key, void **value)
 { 
 	c_avl_node_t *node;
-	
+
 	assert(tree != NULL);
 
 	node = search(tree,key);
@@ -471,32 +516,67 @@ C_AVL_ITERATOR_S *c_avl_get_iterator(C_AVL_TREE_S *psTree)
 
 	return psIter;
 }
-int c_avl_iterator_next(C_AVL_ITERATOR_S *psIter,void **ppvKey,void **ppvValue)
+int c_avl_iterator_next(c_avl_iterator_t *iter,void **key,void **value)
 {
-	C_AVL_NODE_S *psNode;
+	c_avl_node_t *node;
 
-	if((psIter == NULL) || ppvKey == NULL || ppvKey == NULL)
+	if ((iter == NULL) || (key == NULL) || (value == NULL))
 		return -1;
 
-	if(psIter->node == NULL)
+	if(iter->node == NULL)
 	{
-		for(psNode == psIter->tree->root;psNode != NULL; psNode = psNode->left)
-			if(psNode->left == NULL)
+		for(node = iter->tree->root; node != NULL; node->left)
+			if(node->left == NULL)
 				break;
-		psIter->node = psNode;
 	}else
 	{
-		psNode = c_avl_node_next(psIter->node);
+		node = c_avl_node_next(iter->node);
 	}
 
-	if(psNode == NULL)
+	if(node == NULL)
 		return -1;
 
-	psIter->node = psNode;
-	*ppvKey = psNode->key;
-	*ppvValue = psNode->value;
+	iter->node = node;
+	*key = node->key;
+	*value = node->value;
+}/*迭代器*/
+
+int c_avl_iterator_prev(c_avl_iterator_t *iter,void **key,void **value)
+{
+	c_avl_node_t *node;
+
+	if ((iter == NULL) || (key == NULL) || (value == NULL))
+		return -1;
+
+	if(iter->node == NULL)
+	{
+		for(node = iter->tree->root; node != NULL; node->right)
+			if(node->right == NULL)
+				break;
+	}else
+	{
+		node = c_avl_node_prev(iter->node);
+	}
+
+	if(node == NULL)
+		return -1;
+
+	if(node == NULL)
+		return -1;
+
+	iter->node = node;
+	*key = node->key;
+	*value = node->value;
+}
+void c_avl_iterator_destroy(c_avl_iterator_t *iter) { free(iter);  }
+
+int c_avl_size(c_avl_tree_t *t) {
+	if (t == NULL)
+		return 0;
+	return t->size;
 
 }
+
 
 int main()
 {
