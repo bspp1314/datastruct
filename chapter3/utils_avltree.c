@@ -93,7 +93,7 @@ static c_avl_node_t *rotate_right(c_avl_tree_t *tree, c_avl_node_t *x) {
 /*
  *    (x)                        (y)             
  *   /   \                      /   \
- *(1a)    (3y)              (2x)		 (2c)
+ *(1a)    (3y)              (2x)     (2c)
  *        /   \            /    \
  *       (1b)  (2c)      1a     1b 
  */
