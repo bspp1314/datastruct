@@ -170,8 +170,6 @@ void hash_insert(void *key,void *value,HASH_TABLE_S *hash_table)
 	list->len++;
 }
 
-
-
 int main(void)
 {
 	//LIST_S **lists = malloc(sizeof(LIST_S) * 3);
