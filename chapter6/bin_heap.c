@@ -42,7 +42,7 @@ PRI_QUEUE_S *priority_queue_init(int length,int (*compare)(const void *,const vo
 		return NULL;
 	}
 
-	/* Allocate the array plus one extra for sentinel */
+	/* Allocate the array plus one extra for sentinel(哨兵标记) */
 	queue->values = malloc(sizeof(int) * (length+1));
 	if(queue->values == NULL)
 	{
@@ -57,6 +57,29 @@ PRI_QUEUE_S *priority_queue_init(int length,int (*compare)(const void *,const vo
 	queue->values[0] = INT_MIN;
 
 	return queue;
+
+}
+int  *priority_queue_build(PRI_QUEUE_S *queue,int values[],int value_len)
+{
+	if(queue == NULL)
+	{
+		printf("queue not be null");
+		return -1;
+	}
+
+	if(queue->size != 0)
+	{
+		printf("queue size must be null");
+		return -1;
+	}
+
+	if(value_len > queue->length)
+	{
+		printf("queue max length is %d ,but values len is %d",queue->length,value_len);
+		return -1;
+	}
+
+	
 
 }
 int priority_queue_insert(int value,PRI_QUEUE_S *queue)
@@ -111,6 +134,32 @@ int priority_queue_delete_min(PRI_QUEUE_S *queue)
 	queue->values[i] = last_value;
 	return min_value;
 }
+int priority_queue_find_min(PRI_QUEUE_S *queue)
+{
+	if(queue == NULL)
+	{
+		printf("queue is muset not be null");
+		return INT_MIN;
+	}
+
+	if(queue->size == 0)
+	{
+		printf("queue size is 0 \n");
+		return INT_MIN;
+	}
+
+	return queue->values[i];
+}
+void priority_queue_destroy(PRI_QUEUE_S *queue)
+{
+	if(NULL == queue)
+		return;
+
+	free(queue->values);
+	queue->values = NULL;
+	free(queue);
+	queue = NULL:
+}
 
 int main(void)
 {
@@ -119,4 +168,5 @@ int main(void)
 	priority_queue_insert(16,queue);
 	priority_queue_insert(9,queue);
 	priority_queue_insert(99,queue);
+	priority_queue_destroy(queue);
 }
