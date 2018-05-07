@@ -1,4 +1,3 @@
-
 #ifndef UTILS_AVLTREE_H
 #define UTILS_AVLTREE_H
 struct c_avl_node_s
