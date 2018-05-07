@@ -5,20 +5,18 @@
 #include"avl_tree.h"
 
 
-static int 
-calc_balance(c_avl_node_t *avl_node)
+static int calc_balance(c_avl_node_t *avl_node)
 {
 	int left_hight = (avl_node->left == NULL) ? 0 : avl_node->left->height;
 	int right_hight = (avl_node->right == NULL) ? 0 : avl_node->right->height;
 	return left_hight-right_hight;
 }/* 计算左右子树的高度差，获取平衡因子 */
 
-static void
-verify_node(c_avl_node_t *avl_node)
+static void verify_node(c_avl_node_t *avl_node)
 {
 	if( avl_node == NULL )
 		return;
-	
+
 	verify_node(avl_node->left);
 	verify_node(avl_node->right);
 
@@ -27,12 +25,11 @@ verify_node(c_avl_node_t *avl_node)
 			|| (avl_node->parent->right == avl_node)); 
 }/*验证所有节点是否符合平衡二叉树的性质*/
 
-static void 
-verify_tree(c_avl_tree_t *avl_tree)
+static void verify_tree(c_avl_tree_t *avl_tree)
 {
 	if( avl_tree == NULL )
 		return;
-	
+
 	verify_node(avl_tree->root);
 }
 
@@ -41,7 +38,7 @@ free_node(c_avl_node_t *avl_node)
 {
 	if(avl_node == NULL)
 		return;
-	
+
 	free_node(avl_node->left);
 	free_node(avl_node->right);
 
@@ -49,8 +46,7 @@ free_node(c_avl_node_t *avl_node)
 	avl_node = NULL;
 }
 
-static int
-calc_height(c_avl_node_t *avl_node)
+static int calc_height(c_avl_node_t *avl_node)
 {
 	if(avl_node == NULL)
 		return 0;
@@ -62,8 +58,8 @@ calc_height(c_avl_node_t *avl_node)
 }
 
 
-static c_avl_node_t*
-search_node(c_avl_node_t *avl_node, const void *key,int(*compare)(const void *,const void *))
+static c_avl_node_t* search_node(c_avl_node_t *avl_node, 
+		const void *key,int(*compare)(const void *,const void *))
 {
 	c_avl_node_t *result_node = NULL;
 	int comp = 0;
@@ -75,7 +71,7 @@ search_node(c_avl_node_t *avl_node, const void *key,int(*compare)(const void *,c
 
 	comp = compare(key,avl_node->key);
 	if( comp  < 0) // 要搜索的node是该节点的左子树
-		 result_node = search_node(avl_node->left,key,compare);
+		result_node = search_node(avl_node->left,key,compare);
 	else if (comp > 0)
 		result_node = search_node(avl_node->right,key,compare);
 	else
@@ -84,13 +80,12 @@ search_node(c_avl_node_t *avl_node, const void *key,int(*compare)(const void *,c
 	return result_node;
 }
 
-static 
-c_avl_node_t *search_tree(c_avl_tree_t *avl_tree, const void *key)
+static c_avl_node_t *search_tree(c_avl_tree_t *avl_tree, const void *key)
 {
-	
+
 	if( avl_tree == NULL )
 		return NULL;
-	
+
 	return search_node(avl_tree->root,key,avl_tree->compare);
 }
 /*         (x)                            (y)
@@ -102,8 +97,7 @@ c_avl_node_t *search_tree(c_avl_tree_t *avl_tree, const void *key)
  *
  */
 
-static c_avl_node_t*
-rotate_right(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
+static c_avl_node_t* rotate_right(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
 {
 	c_avl_node_t *node_y = NULL;
 	c_avl_node_t *node_b = NULL;
@@ -112,13 +106,13 @@ rotate_right(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
 	assert(node_x != NULL);
 	assert(avl_tree != NULL);
 	assert(node_x->left !=  NULL);
-	
+
 	node_y = node_x->left;
 	node_b = node_y->right;
 	node_parent = node_x->parent;
 
 	node_y->right = node_x;
-  node_y->parent = node_parent;
+	node_y->parent = node_parent;
 
 	node_x->left = node_b;
 	node_x->parent = node_y;
@@ -128,13 +122,13 @@ rotate_right(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
 
 	assert((node_parent == NULL) || (node_parent->left == node_x) || (node_parent->right) == node_x);
 	if( node_parent == NULL)
-			avl_tree->root = node_y;
+		avl_tree->root = node_y;
 	else
 	{
-		 if(node_parent->left == node_x)
-			 node_parent->left = node_y;
-		 else 
-			 node_parent->right = node_y;
+		if(node_parent->left == node_x)
+			node_parent->left = node_y;
+		else 
+			node_parent->right = node_y;
 	}
 
 	node_x->height = calc_height(node_x);
@@ -144,7 +138,6 @@ rotate_right(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
 }
 
 
-
 /*
  *    (x)                        (y)             
  *   /   \                      /   \
@@ -152,8 +145,7 @@ rotate_right(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
  *        /   \            /    \
  *       (1b)  (2c)      1a     1b 
  */
-static c_avl_node_t* 
-rotate_left(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
+static c_avl_node_t* rotate_left(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
 { 
 	c_avl_node_t *node_y;
 	c_avl_node_t *node_parent;
@@ -179,13 +171,13 @@ rotate_left(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
 	assert((node_parent == NULL) || (node_parent->left == node_x) || (node_parent->right) == node_x);
 
 	if( node_parent == NULL)
-			avl_tree->root = node_y;
+		avl_tree->root = node_y;
 	else
 	{
-		 if(node_parent->left == node_x)
-			 node_parent->left = node_y;
-		 else 
-			 node_parent->right = node_y;
+		if(node_parent->left == node_x)
+			node_parent->left = node_y;
+		else 
+			node_parent->right = node_y;
 	}
 	return node_y;
 }
@@ -201,10 +193,9 @@ rotate_left(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
  *  先右旋,再左旋
  *
  */
-static c_avl_node_t* 
-rotate_left_right(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
+static c_avl_node_t* rotate_left_right(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
 {
-	
+
 	rotate_left(avl_tree,node_x->left);
 	return rotate_right(avl_tree,node_x);
 }
@@ -218,15 +209,14 @@ rotate_left_right(c_avl_tree_t *avl_tree, c_avl_node_t *node_x)
  *  (1b)    (1c)                      (1c)      (1d)
  *先左旋,在右旋
  */
-static c_avl_node_t*
-rotate_right_left(c_avl_tree_t *avl_tree,c_avl_node_t *node_x)
+
+static c_avl_node_t* rotate_right_left(c_avl_tree_t *avl_tree,c_avl_node_t *node_x)
 {
 	rotate_right(avl_tree,node_x->right);
 	return rotate_left(avl_tree,node_x);
 }
 
-static void 
-rebalance(c_avl_tree_t *avl_tree,c_avl_node_t *avl_node)
+static void rebalance(c_avl_tree_t *avl_tree,c_avl_node_t *avl_node)
 {
 	int b1;
 	int b2;
@@ -242,7 +232,7 @@ rebalance(c_avl_tree_t *avl_tree,c_avl_node_t *avl_node)
 			b2 = calc_balance(avl_node->right);
 			assert( b2 >= -1 && b2 <=1 );
 			if( b2 == 1 )
-			 avl_node = rotate_right_left(avl_tree,avl_node);
+				avl_node = rotate_right_left(avl_tree,avl_node);
 			else
 				avl_node = rotate_left(avl_tree,avl_node);
 		}else if(b1 == 2)
@@ -260,14 +250,13 @@ rebalance(c_avl_tree_t *avl_tree,c_avl_node_t *avl_node)
 				break;
 			avl_node->height = height;
 		}
-    
+
 		assert(avl_node->height == calc_balance(avl_node));//旋转后的高节点的高度并不会改变，详细见上四个图
 		avl_node = avl_node->parent;
 	}
 }
 
-c_avl_tree_t*
-c_avl_create(int(*compare)(const void *,const void *))
+c_avl_tree_t* c_avl_create(int(*compare)(const void *,const void *))
 {
 	c_avl_tree_t *avl_tree = NULL;
 
@@ -276,7 +265,7 @@ c_avl_create(int(*compare)(const void *,const void *))
 		printf("compare function not be null\n");
 		return NULL;
 	}
-	
+
 	avl_tree = (c_avl_tree_t *) malloc(sizeof(c_avl_tree_t));
 	if(avl_tree == NULL)
 	{
@@ -291,8 +280,7 @@ c_avl_create(int(*compare)(const void *,const void *))
 	return avl_tree;
 }
 
-void 
-c_avl_destroy(c_avl_tree_t *avl_tree)
+void c_avl_destroy(c_avl_tree_t *avl_tree)
 {
 	if(avl_tree == NULL)
 		return;
@@ -302,8 +290,7 @@ c_avl_destroy(c_avl_tree_t *avl_tree)
 	avl_tree = NULL;
 }
 
-int
-c_avl_insert(c_avl_tree_t *avl_tree,void *key,void *value)
+int c_avl_insert(c_avl_tree_t *avl_tree,void *key,void *value)
 {
 	c_avl_node_t *new;
 	c_avl_node_t *index;
@@ -367,9 +354,191 @@ c_avl_insert(c_avl_tree_t *avl_tree,void *key,void *value)
 	avl_tree->size++;
 	return 0;
 }
+static c_avl_node_t *c_avl_node_next(c_avl_node_t *avl_node)
+{
+	c_avl_node_t *result_node;
 
+	if(avl_node == NULL)
+		return NULL;
 
+	if(avl_node->right == NULL)
+	{
+		result_node = avl_node->parent;
+		while((result_node != NULL) && (result_node->parent != NULL))
+		{
+			if(result_node->left == avl_node)
+				break;
 
+			avl_node = result_node;
+			result_node = result_node->parent;
+		}
+
+		if((result_node == NULL) || result_node->parent == NULL)
+		{
+			assert((result_node == NULL) || (result_node->parent == NULL));
+			return NULL;
+		}else
+		{
+			assert(result_node->left == avl_node);
+			return result_node;
+		}
+	}else{
+		result_node = avl_node->left;
+		while(result_node->left != NULL)
+			result_node = result_node->left;
+	}
+	return result_node;
+}/*采用中序(左中右)遍历获取下一个节点*/
+
+static c_avl_node_t * c_avl_node_pre(c_avl_node_t *avl_node)
+{
+	c_avl_node_t *result_node;
+
+	if(avl_node->left == NULL)
+	{
+		result_node = avl_node->parent;
+		while(result_node != NULL && result_node->parent != NULL)
+		{
+			if(result_node->right == avl_node)
+				break;
+
+			avl_node = result_node;
+			result_node = avl_node->parent;
+		}
+
+		if((result_node == NULL) || result_node->parent == NULL)
+		{
+			assert((result_node == NULL) || (result_node->parent == NULL));
+			return NULL;
+		}else
+		{
+			assert(result_node->right == avl_node);
+			return result_node;
+		}
+	}else{
+
+		result_node = avl_node->left;
+		while(result_node->right != NULL)
+			result_node = result_node->right;
+	}
+	return result_node;
+}
+
+static int _remove(c_avl_tree_t *avl_tree,c_avl_node_t *avl_node)
+{
+	assert(avl_tree != NULL && avl_node != NULL);
+
+	if ((avl_node->left != NULL) && (avl_node->right != NULL))
+	{
+		c_avl_node_t *r_node; /* repalcement node */
+		if(calc_balance(avl_node) > 0)/* left is higher*/
+		{
+			assert(avl_node->left != NULL);
+			r_node = avl_node->left;
+			while(r_node->right != NULL)
+				r_node = r_node->right;
+		}else{
+			assert(avl_node->right != NULL);
+				r_node = avl_node->right;
+			while(r_node->left != NULL)
+				r_node = r_node->right;	
+		}
+		assert((r_node->right == NULL) || r_node->left == NULL);
+
+		avl_node->key = r_node->key;
+		avl_node->value = r_node->value;
+
+		avl_node = r_node;
+	}
+
+	assert((avl_node->right == NULL) || (avl_node->left == NULL));
+	assert((avl_node->parent == NULL) || (avl_node->parent->left = avl_node)
+			|| (avl_node->parent->right == NULL));
+	if((avl_node->left == NULL) && (avl_node->right == NULL))
+	{
+		if(avl_node->parent == NULL)
+		{
+			assert(avl_tree->root = avl_node);
+			avl_tree->root = NULL;
+		}
+		else
+		{
+			if(avl_node->parent->left == avl_node)
+				avl_node->parent->left = NULL;
+			else
+				avl_node->parent->right = NULL;
+
+			rebalance(avl_tree,avl_node->parent);
+		}
+
+		free_node(avl_node);
+	}else if(avl_node->left == NULL)
+	{
+		assert(calc_balance(avl_node) == -1);
+		if(avl_node->parent == NULL)
+		{
+			assert(avl_tree->root = avl_node);
+			avl_tree->root = NULL;
+		}else if(avl_node->parent->left = avl_node)
+		{
+			avl_node->parent->left = avl_node->right;
+		}else
+		{
+			avl_node->parent->right = avl_node->right;
+		}
+
+		avl_node->right->parent = avl_node->parent;
+		if(avl_node->parent != NULL)
+			rebalance(avl_tree,avl_node->parent);
+
+		avl_node->right = NULL;
+		free_node(avl_node);
+	}else if(avl_node->right== NULL)
+	{
+		assert(calc_balance(avl_node) == 1);
+		if(avl_node->parent == NULL)
+		{
+			assert(avl_tree->root = avl_node);
+			avl_tree->root = NULL;
+		}else if(avl_node->parent->left == avl_node)
+		{
+			avl_node->parent->left = avl_node->left;
+		}else if(avl_node->parent->right == avl_node)
+		{
+			avl_node->parent->right = avl_node->left;
+		}
+
+		avl_node->left->parent = avl_node->parent;
+		if(avl_node->parent != NULL)
+			rebalance(avl_tree,avl_node->parent);
+
+		avl_node->left = NULL;
+		free_node(avl_node);
+	}else{
+		assert(0);
+	}
+
+	return 0;
+}
+int c_avl_remove(c_avl_tree_t *avl_tree,const *key,void **rkey,void **rvalue)
+{
+	c_avl_node_t *n;
+
+	assert(avl_tree != NULL);
+	n = search_tree(avl_tree,key);
+	if(n == NULL)
+		return 0;
+
+	if(rkey != NULL)
+		*rkey = n->key;
+	if(rvalue != NULL)
+		*rvalue = n->value;
+
+	int status = _remove(avl_tree,n);
+	verify_tree(avl_tree);
+	avl_tree->size--;
+	return status;
+}
 
 int main(){
 	return 0;
