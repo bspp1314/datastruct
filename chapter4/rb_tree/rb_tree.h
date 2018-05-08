@@ -2,7 +2,7 @@
 #define RB_TREE
 
 typedef enum { 
-	READ = 0, 
+	RED = 0, 
 	BLACK = 1
 }color_t;
 

@@ -434,7 +434,7 @@ static c_avl_node_t * c_avl_node_prev(c_avl_node_t *avl_node)
 
 static int _remove(c_avl_tree_t *avl_tree,c_avl_node_t *avl_node)
 {
-	assert(avl_tree != NULL && avl_node != NULL);
+f	assert(avl_tree != NULL && avl_node != NULL);
 
 	if ((avl_node->left != NULL) && (avl_node->right != NULL))
 	{
