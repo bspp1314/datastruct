@@ -13,12 +13,12 @@ typedef struct double_list{
 }double_list_t;
 
 double_list_t *c_double_list_create();
-void  c_double_list_destroy(double_list_t *double_list);
-node_t *c_double_list_get_node(double_list_t *double_list,int index);
+void  c_double_list_destroy(double_list_t *list);
+node_t *c_double_list_get_node(double_list_t *list,int index);
 int c_double_list_add(double_list_t *double_list,int value);
-int c_double_list_add_index(double_list_t *double_list,int value,int index);
-int c_double_list_remove(double_list_t *double_list);
-int c_double_list_remove_index(double_list_t *double_list,int index);
+int c_double_list_add_index(double_list_t *list,int value,int index);
+int c_double_list_remove(double_list_t *list);
+int c_double_list_remove_index(double_list_t *list,int index);
 
 
 

@@ -3,7 +3,7 @@
 #include<assert.h>
 #include"double_list.h"
 
-static node_t *get_node(doube_list_t *list,int index)
+static node_t *get_node(double_list_t *list,int index)
 {
 	node_t *node;
 
@@ -52,8 +52,8 @@ double_list_t *c_double_list_create()
 		return NULL;
 	}
 
-	double_list->tail = (node_t *)malloc(sizeof(node_t));
-	if(double_list->tail == NULL)
+	list->tail = (node_t *)malloc(sizeof(node_t));
+	if(list->tail == NULL)
 	{
 		printf("malloc list->tail is null");
 		free(list->head);
@@ -67,6 +67,27 @@ double_list_t *c_double_list_create()
 	list->tail->pre = list->head;
 
 	return list;
+}
+
+void c_double_list_destroy(double_list_t *list)
+{
+	node_t  *node;
+	node_t  *next;
+
+	if(list == NULL)
+		return;
+	
+	node = list->head->next;
+	while(node != list->tail)
+	{
+		next = node->next;
+		free(node);
+		node = next;
+	}
+
+	free(list->head);
+	free(list->tail);
+	free(list);
 }
 int c_double_list_add(double_list_t *list,int value)
 {
@@ -107,6 +128,7 @@ int c_double_list_add_index(double_list_t *list,int value,int index)
 {
 	node_t *new;
 	node_t *pre;
+	node_t *next;
 
 	if(list == NULL)
 		return -1;
@@ -184,8 +206,9 @@ int c_double_list_remove_index(double_list_t *list,int index)
 	del->next->pre = del->pre;
 	list->size--;
 	return 0;
-	
 }
-
-
+node_t *c_double_list_get_node(double_list_t *list,int index)
+{
+	return get_node(list,index);
+}
 

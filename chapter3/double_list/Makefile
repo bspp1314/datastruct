@@ -1,7 +1,7 @@
-objects = list.o list_test.c 
-list:$(objects)
-	  gcc -o list  $(objects) -std=gnu99
+objects = double_list.o double_list_test.c 
+double_list:$(objects)
+	  gcc -o double_list  $(objects) -std=gnu99
 .PHONY:clean
 clean :
 	  rm -rf *.o
-		rm -rf list
+		rm -rf double_list
