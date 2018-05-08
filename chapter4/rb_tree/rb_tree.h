@@ -38,4 +38,7 @@ int  c_rb_remove(c_rb_tree_t *rb_tree,const *key,void **rkey,void **rvalue);
 int  c_rb_get(c_rb_tree_t *rb_tree,const *key,void **rvalue);
 int	 c_rb_pick(c_rb_tree_t *t, void **key, void **value);
 
+c_rb_node_t* util_rbsubtree_min(c_rb_node_t *node, c_rb_node_t *sentinel);
+c_rb_node_t* util_rbsubtree_max(c_rb_node_t *node, c_rb_node_t *sentinel);
+
 #endif
