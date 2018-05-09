@@ -203,7 +203,56 @@ static c_rb_node_t* rotate_left(c_rb_tree_t *rb_tree, c_rb_node_t *node_x)
 
 	return node_y;
 }
-
+/*node=>parent->parent is left node
+ *
+ * case1 
+ *   A->parent(B) and A->uncle is red
+ *   set B black
+ *   set B black
+ *   set D red
+ *   set newA = D
+ *        (+) D             (-)
+ *       /    \           /     \
+ *  B (-)     (-) C    B(+)     (+) C
+ *    /  \    /  \      /\       / \
+ * A(-)   *  *    *  A(-) *     *   *
+ *
+ * case2
+ *   A->parent(B) is red and A->uncle(B) is black,and A is right
+ *   set newA = A->parent(B)
+ *   rotate_left(newA)
+ *   
+ *        (+) D             
+ *       /    \
+ *  B (-)     (+) C    
+ *    /  \    /  \
+ *  *   A(-) *    *  
+ *
+ *
+ *        (+) D             
+ *       /    \
+ *   A (-)   (+) C    
+ *    /      /  \
+ *  B(-)    *    *  
+ *
+ *
+ * case3
+ *   A->parent(B) is red and A->uncle(B) is black,and A is left 
+ *	 set B black
+ *	 set D red
+ *   rotate_right(D)
+ *
+ *        (+) D             
+ *       /    \
+ *   B (-)   (+) C    
+ *    /  \   /  \
+ *  A(-)  *  *   *  
+ *
+ *
+ *
+ *
+ *
+ */
 static void insert_fixup(c_rb_tree_t *tree, c_rb_node_t *node)
 {
 	c_rb_node_t *parent;
@@ -501,11 +550,11 @@ static void _remove(c_rb_tree_t *rbtree,c_rb_node_t *node)
 	}else if(node->left == NULL)
 	{
 		x = node->right;
-		transplant(rbtree,node,node->left);
+		transplant(rbtree,node,node->right);
 	}else
 	{
-		x = node->right;
-		transplant(rbtree,node,node->right);
+		x = node->left;
+		transplant(rbtree,node,node->left);
 	}
 
 	color = rbnode_is_black(node);
@@ -513,7 +562,7 @@ static void _remove(c_rb_tree_t *rbtree,c_rb_node_t *node)
 	rbtree->size--;
 
 	if(color == BLACK)
-		remove_fixup(rbtree,node);
+		remove_fixup(rbtree,x);
 
 }
 void c_rbtree_remove1(c_rb_tree_t *rbtree,void const *key,void **rkey,void **rvalue)

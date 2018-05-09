@@ -3,7 +3,7 @@
 #include<string.h>
 #include<malloc.h>
 #include<time.h>
-int compare(int *a,int *b){
+int compare(const void  *a,const void  *b){
 	if( *((int*)a) == *((int *)b)  )
 	{
 		return 0;
@@ -18,57 +18,38 @@ int compare(int *a,int *b){
 	return 1;
 
 }
+static void print_pre_order(c_rb_node_t *node)
+{
+	if(node != NULL)
+	{
+			
+		print_pre_order(node->left);
+		printf("-- next is --%d\n",*((int *)node->key));
+		print_pre_order(node->right);
+	}
+}
 int main(){
 	c_rb_tree_t *data_sets;
-	int i = 0;
-	struct timeval  start,end;
-	long iTimeInterval;
 
-	data_sets = c_rbtree_create((int(*)(const void *,const void *))compare);
+	data_sets = c_rbtree_create(compare);
 	if(data_sets == NULL)
 		return -1;
 
-	int p1 = 10;
-	int p2 = 5;
-	int p3 = 20;
-	int p4 = 33;
-	int p5 = 44;
-	int p6 = 19;
-	int p7 = 78;
-	int p8 = 34;
-	int p9 = -2;
-	printf("======================================\n");
-	c_rbtree_insert(data_sets,(void*)&p1,NULL);
-	c_rbtree_insert(data_sets,(void*)&p2,NULL);
-	c_rbtree_insert(data_sets,(void*)&p3,NULL);
-	c_rbtree_insert(data_sets,(void*)&p4,NULL);
-	c_rbtree_insert(data_sets,(void*)&p5,NULL);
-	c_rbtree_insert(data_sets,(void*)&p6,NULL);
-	c_rbtree_insert(data_sets,(void*)&p7,NULL);
-	c_rbtree_insert(data_sets,(void*)&p8,NULL);
-	c_rbtree_insert(data_sets,(void*)&p9,NULL);
+	for(int i = 0;i < 10000;i++)
+	{
+		int *p = (int *)malloc(sizeof(int));
+		*p = i;
+		c_rbtree_insert(data_sets,(void*)p,NULL);
+	}
 
 	printf("root value is %d\n",*((int *)data_sets->root->key));
-	printf("root->left value is %d\n",*((int *)data_sets->root->left->key));
-	printf("root->left->left value is %d\n",*((int *)data_sets->root->left->left->key));
-	printf("root->right value is %d\n",*((int *)data_sets->root->right->key));
-	printf("root->right->right->left value is %d\n",*((int *)data_sets->root->right->left->key));
-	printf("root->right->right->left->left value is %d\n",*((int *)data_sets->root->right->left->left->key));
-	printf("root->right->right->right value is %d\n",*((int *)data_sets->root->right->right->key));
-	printf("root->right->right->right->left value is %d\n",*((int *)data_sets->root->right->right->left->key));
-	printf("root->right->right->right->right value is %d\n",*((int *)data_sets->root->right->right->right->key));
 	
-	c_rbtree_remove1(data_sets,(void*)&p4,NULL,NULL);
+	int *p;
+	while(c_rb_pick(data_sets,(void **)&p,NULL) == 0)
+	{
+		free(p);
+	}
 
-	printf("root value is %d\n",*((int *)data_sets->root->key));
-	printf("root->left value is %d\n",*((int *)data_sets->root->left->key));
-	printf("root->left->left value is %d\n",*((int *)data_sets->root->left->left->key));
-	printf("root->right value is %d\n",*((int *)data_sets->root->right->key));
-	printf("root->right->->left value is %d\n",*((int *)data_sets->root->right->left->key));
-	printf("root->right->left->left->value is %d\n",*((int *)data_sets->root->right->left->left->key));
-	printf("root->right->right->right value is %d\n",*((int *)data_sets->root->right->right->key));
-	printf("root->right->right->right->right value is %d\n",*((int *)data_sets->root->right->right->right->key));
 	c_rbtree_destroy(data_sets);
 	return 0;
-
 }
