@@ -2,6 +2,14 @@
 #include<stdio.h>
 #include"left_heap.h"
 
+/*左堆得性质
+ * a 节点的键值小于或等于它的左右节点（注:如果是大根堆则是相反）
+ * b 节点的左孩子的NPL >= 右孩子的NPL
+ * c 节点的NPL =  它的右孩子的NPL + 1
+ * 注:NPL(NULL Path Length) 从一个节点到其子孙节点第一个不满节点的距离，
+ * 满节点:一个节点的左右子树都存在
+ */
+
 static void free_node(node_t *node)
 {
 	if(node == NULL)
@@ -19,7 +27,7 @@ static void swap_node(node_t *x, node_t *y)
 		return;
 
 	node_t temp = *x;
-  *x = *y;
+	*x = *y;
 	*y = temp;
 }
 /*
@@ -43,9 +51,9 @@ static node_t* merge_left(node_t *x,node_t *y,
 
 	if(y == NULL)
 		return x;
-	
+
 	if(compare(x->key,y->key) > 0) /* x > y*/
-			swap_node(x,y);
+		swap_node(x,y);
 
 	//将x的右孩子和y和并
 	x->right = merge_left(x->right,y,compare);
@@ -53,9 +61,9 @@ static node_t* merge_left(node_t *x,node_t *y,
 	{
 		x->right->parent = x;
 	}
-		
 
-  if(x->left == NULL || x->left->npl < x->right->npl)
+
+	if(x->left == NULL || x->left->npl < x->right->npl)
 	{
 		//交换左右节点
 		node_t *temp = x->left;
@@ -71,6 +79,7 @@ static node_t* merge_left(node_t *x,node_t *y,
 
 }
 
+/* 按照中序遍历获取某其next节点 */
 node_t *c_left_heap_next(node_t *node)
 {
 	node_t *result;
@@ -83,23 +92,20 @@ node_t *c_left_heap_next(node_t *node)
 		result = node->parent;
 		while((result != NULL) && result->parent != NULL)/* 回溯到根节点 */
 		{
-
-			  /*
-				 *
-				 *
-				 *        root                root( node 没有next节点 )
-				 *       /    \               /   \
-				 *      &                          &
-				 *    /  \                          \
-				 *        &1                         &1
-				 *          \                          \
-				 *           &2                         &3
-				 *            \                           \
-				 *             &3                          node
-				 *               \                        /
-				 *                node                         
-				 *               / 
-				 */          
+			/*
+			 *         &0                  root( node 没有next节点 )
+			 *       /    \               /   \
+			 *      &1                         &0
+			 *    /  \                          \
+			 *        &2                         &1
+			 *          \                          \
+			 *           &3                         &2
+			 *            \                           \
+			 *             &4                          node
+			 *               \                        /
+			 *                node                         
+			 *               / 
+			 */          
 			if(result->left == node)/*如果该节点是左节点，结束循环*/
 				break;
 			node = result;
@@ -108,7 +114,7 @@ node_t *c_left_heap_next(node_t *node)
 		if(result == NULL || result->parent == NULL)
 			return NULL;
 		else
-			return node;
+			return result;
 	}else
 	{
 		result = node->right;
@@ -118,9 +124,55 @@ node_t *c_left_heap_next(node_t *node)
 	return result;
 }
 
-left_heap_t* c_left_heap_create(int(*compare)(const void *,const void *))
+/* 按照反中序遍历（右中左）获取某其pre节点 */
+node_t *c_left_heap_pre(node_t *node)
 {
-	left_heap_t *heap = NULL;
+
+	node_t *result;
+
+	if(node == NULL)
+		return NULL;
+
+	if(node->left == NULL)
+	{
+		result = node->parent;
+		/*            &0                           root (node 没有pre 节点)       
+		 *              \                          /
+		 *               &1                       &1
+		 *              /                        /
+		 *             &2                       &2
+		 *            /                       /
+		 *           &3                     &3
+		 *          /                      /
+		 *         &4                     node
+		 *        /
+		 *      node
+		 *        \
+		 */
+		while(result != NULL && result->parent != NULL)
+		{
+			if(result->right == node)/*如果该节点是右节点，结束循环*/
+				break;
+			node = result;
+			result = node->parent;
+		}
+
+		if(result== NULL || result->parent == NULL)
+			return NULL;
+		else
+			return result;
+	}else
+	{
+		result = node->left;
+		while(result->right != NULL)
+			result = result->right;
+	}
+	return result;
+}
+
+c_left_heap_t* c_left_heap_create(int(*compare)(const void *,const void *))
+{
+	c_left_heap_t *heap = NULL;
 
 	if(compare == NULL)
 	{
@@ -128,10 +180,10 @@ left_heap_t* c_left_heap_create(int(*compare)(const void *,const void *))
 		return NULL;
 	}
 
-	heap = (left_heap_t *) malloc(sizeof(left_heap_t));
+	heap = (c_left_heap_t *) malloc(sizeof(c_left_heap_t));
 	if(heap == NULL)
 	{
-		printf("malloc left_heap tree failed\n");
+		printf("malloc c_left_heap tree failed\n");
 		return NULL;
 	}
 
@@ -142,7 +194,7 @@ left_heap_t* c_left_heap_create(int(*compare)(const void *,const void *))
 	return heap;
 }
 
-void c_left_heap_destroy(left_heap_t *heap)
+void c_left_heap_destroy(c_left_heap_t *heap)
 {
 	if(heap == NULL)
 		return;
@@ -152,7 +204,7 @@ void c_left_heap_destroy(left_heap_t *heap)
 	heap = NULL;
 }
 
-int c_left_heap_insert(left_heap_t *heap,void *key,void *value)
+int c_left_heap_insert(c_left_heap_t *heap,void *key,void *value)
 {
 	node_t *new;
 
@@ -161,7 +213,7 @@ int c_left_heap_insert(left_heap_t *heap,void *key,void *value)
 
 	if( (new = (node_t *)malloc(sizeof(node_t))) == NULL)
 	{
-		printf("malloc left_heap failed \n");
+		printf("malloc c_left_heap failed \n");
 		return;
 	}
 
@@ -170,14 +222,14 @@ int c_left_heap_insert(left_heap_t *heap,void *key,void *value)
 	new->npl = 0;
 	new->left = NULL;
 	new->right = NULL;
-	
+
 	heap->root = merge_left(heap->root,new,heap->compare);
 	heap->size++;
 	return 0;
 }
 
 
-left_heap_t *c_merge_left_heap(left_heap_t *h1,left_heap_t *h2)
+c_left_heap_t *c_merge_left_heap(c_left_heap_t *h1,c_left_heap_t *h2)
 {
 	if(h1->compare != h2->compare)
 	{
@@ -196,3 +248,93 @@ left_heap_t *c_merge_left_heap(left_heap_t *h1,left_heap_t *h2)
 	free(h2);
 	return h1;
 }
+void c_left_heap_remove(c_left_heap_t *heap)
+{
+	if(NULL == heap || 0 == heap->size)
+		return;
+
+	node_t *left_node = heap->root->left;
+	node_t *right_node = heap->root->right;
+
+	left_node->parent = NULL;
+	right_node->parent = NULL;
+
+	free(heap->root);
+	merge_left(right_node,left_node,heap->compare);
+}
+c_left_heap_iterator_t *c_left_heap_iter_create(c_left_heap_t *heap)
+{
+	c_left_heap_iterator_t *iter = NULL;
+
+	if(NULL == heap || 0 == heap->size)
+		return NULL;
+
+	iter = ( c_left_heap_iterator_t * )malloc(sizeof(c_left_heap_iterator_t));
+	if(iter == NULL)
+	{
+		printf("malloc iter failed \n");
+		return NULL;
+	}
+
+	iter->heap = heap;
+	iter->node = NULL;
+
+	return iter;
+}
+
+int c_left_heap_iterator_next(c_left_heap_iterator_t *iter,void **key, void **value) 
+{
+	node_t *node;
+
+	if(iter == NULL || iter->heap == NULL)
+		return -1;
+
+	if(iter->node == NULL)
+	{
+		node =iter->heap->root;
+		while(node != NULL && node->left != NULL)
+			node = node->left;
+	}else
+	{
+		node = c_left_heap_next(iter->node);
+	}
+
+	iter->node = node;
+
+	if(key != NULL)
+		*key = node->key;
+
+	if(value != NULL)
+		*value = node->value;
+	return 0;
+}
+
+int c_left_heap_iterator_pre(c_left_heap_iterator_t *iter,void **key, void **value) 
+{
+	node_t *node;
+
+	if(iter == NULL || iter->heap == NULL)
+		return -1;
+
+	if(iter->node == NULL)
+	{
+		node =iter->heap->root;
+		while(node != NULL && node->right != NULL)
+			node = node->right;
+	}else
+	{
+		node = c_left_heap_pre(iter->node);
+	}
+
+	iter->node = node;
+
+	if(key != NULL)
+		*key = node->key;
+
+	if(value != NULL)
+		*value = node->value;
+	return 0;
+}
+
+
+

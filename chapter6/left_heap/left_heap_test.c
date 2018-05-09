@@ -31,7 +31,7 @@ static void print_pre_order(node_t *node)
 }
 int main(){
 
-	left_heap_t *left_heap = c_left_heap_create(compare);
+	c_left_heap_t *left_heap = c_left_heap_create(compare);
 	if(left_heap == NULL)
 		return -1;
 
@@ -62,8 +62,8 @@ int main(){
 	printf("%d\n",*((int *)left_heap->root->right->key));
 
 	
-	node_t *n = c_left_heap_next(left_heap->root);
-	printf("root next is %d\n",*((int *)n->key));
+	//node_t *n = c_left_heap_next(left_heap->root);
+	//printf("root next is %d\n",*((int *)n->key));
 
 	printf("=================================================\n");
   print_pre_order(left_heap->root);
