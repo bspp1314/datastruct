@@ -169,6 +169,15 @@ node_t *c_left_heap_pre(node_t *node)
 	}
 	return result;
 }
+static node_t *left_leftest(node_t *node,int begin,int end)
+{
+ node_t *result = NULL;
+
+}
+node_t *c_left_heap_level_pre(node_t *node)
+{
+	
+}
 
 c_left_heap_t* c_left_heap_create(int(*compare)(const void *,const void *))
 {

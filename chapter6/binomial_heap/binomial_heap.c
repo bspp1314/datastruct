@@ -56,6 +56,7 @@ static void heap_link(heap_node_t *node1,heap_node_t *node2)
 	node1->parent = node2;
 	node1->next = node2->left;
 	node2->left = node1;
+	node2->degree++;
 }
 
 /* 合并而项堆 */
@@ -107,6 +108,70 @@ static heap_node_t* heap_union(heap_node_t *node1,heap_node_t *node2,
 
 	return heap;
 }
+static heap_node_t *heap_reverse(heap_node_t *node)
+{
+	heap_node_t *tail = NULL;
+	heap_node_t *next;
+
+	if(node == NULL)
+		return NULL;
+
+	node->parent = NULL;
+	while(node->next != NULL)
+	{
+		next = node->next;
+		node->next = tail;
+		tail = node;
+		node = next;
+		node->parent = NULL;
+	}
+	node->next = tail;
+	return node;
+}
+
+static void free_node(heap_node_t *node)
+{
+	if(node == NULL)
+		return;
+
+	free_node(node->left);
+	free_node(node->next);
+	free(node);
+	node = NULL;
+}
+c_binomial_heap_t* c_binomial_heap_create(int(*compare)(const void *,const void *))
+{
+	c_binomial_heap_t *heap = NULL;
+
+	if(compare == NULL)
+	{
+		printf("compare function not be null\n");
+		return NULL;
+	}
+
+	heap = (c_binomial_heap_t *) malloc(sizeof(c_binomial_heap_t));
+	if(heap == NULL)
+	{
+		printf("malloc c_binomial_heap tree failed\n");
+		return NULL;
+	}
+
+	heap->root = NULL;
+	heap->size = 0;
+	heap->compare = compare;
+
+	return heap;
+}
+
+void c_binomial_heap_destroy(c_binomial_heap_t *heap)
+{
+	if(heap == NULL)
+		return;
+
+	free_node(heap->root);
+	free(heap);
+	heap = NULL;
+}
 
 c_binomial_heap_t *c_binomial_heap_union(c_binomial_heap_t *heap1,
 		c_binomial_heap_t *heap2)
@@ -151,28 +216,28 @@ int c_binomial_heap_insert(c_binomial_heap_t *heap,void *key)
 	heap->root = heap_union(heap->root,node,heap->compare);
 	heap->size++;
 }
-
-static heap_node_t *heap_reverse(heap_node_t *node)
+heap_node_t *c_binomial_min(c_binomial_heap_t *heap)
 {
-	heap_node_t *tail = NULL;
-	heap_node_t *next;
+	heap_node_t *min = NULL;
+	heap_node_t *pos = NULL;
 
-	if(node == NULL)
+	if(heap == NULL || heap->root == NULL)
 		return NULL;
 
-	node->parent = NULL;
-	while(node->next != NULL)
+	min = heap->root;
+	pos = min->next;
+
+	while(pos != NULL)
 	{
-		next = node->next;
-		node->next = tail;
-		tail = node;
-		node = next;
-		node->parent = NULL;
+		if(heap->compare(min->key,pos->key))
+			min = pos;
+
+		pos = pos->next;
 	}
-	node->next = tail;
-	return node;
+
+	return min;
 }
-void  c_binomial_heap_delete(c_binomial_heap_t *heap)
+void  c_binomial_heap_delete(c_binomial_heap_t *heap,void **rkey)
 {
 	heap_node_t *min = NULL;
 	heap_node_t *min_pre = NULL;
@@ -196,7 +261,6 @@ void  c_binomial_heap_delete(c_binomial_heap_t *heap)
 		next_pre = next;
 		next = next->next;
 	}/*查找最小的节点*/
-
 	if(min_pre != NULL)
 		min_pre->next = min->next;
 	else
@@ -204,16 +268,12 @@ void  c_binomial_heap_delete(c_binomial_heap_t *heap)
  
 	heap->root = heap_union(heap->root,heap_reverse(min->left),
 			heap->compare);
+
+	if(rkey != NULL)
+		*rkey = min->key;
+
 	free(min);
 	heap->size--;
 }
 
-int main()
-{
-	heap_node_t node1 = {0};
-	heap_node_t node2 = {0};
-	node1.degree = 1;
-	node2.degree = 2;
-	heap_merge(&node1,&node2);
-}
 
