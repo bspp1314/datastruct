@@ -13,6 +13,20 @@
  *
  */
 #define LOG2(x) ((log((double)(x))) / (log(2.0)))
+
+static void fibonacci_node_destroy(fibonacci_node_t *node)
+{
+	fibonacci_node_t *tmp = node;
+
+	if(node == NULL)
+		return;
+
+	do{
+		fibonacci_node_destroy(node->child);
+		node = node->right;
+		free(node->left);
+	}while(node != tmp );
+}
 static fibonacci_node_t* create_node(void *key)
 {
 	fibonacci_node_t *node = NULL;
@@ -81,64 +95,6 @@ static void fibonacci_node_remove(fibonacci_node_t *node)
 	node->left->right = node->right;
 	node->right->left = node->left;
 }
-int c_fibonacci_heap_insert(c_fibonacci_heap_t *heap,void *key)
-{
-	fibonacci_node_t *node = NULL;
-
-	if(heap == NULL || key == NULL)
-		return -1;
-
-	node = create_node(key);
-	if(node == NULL)
-		return -1;
-
-	if(heap->size == 0)
-		heap->min_node = node;
-	else
-	{
-		fibonacci_node_add(node,heap->min_node);
-		if(heap->compare(heap->min_node,node) > 0)
-			heap->min_node = node;
-	}
-	heap->size++;
-}
-c_fibonacci_heap_t* c_fibonacci_heap_union(c_fibonacci_heap_t *h1,
-		c_fibonacci_heap_t *h2)
-{
-	if(h1 == NULL)
-		return h2;
-
-	if(h2 == NULL)
-		return h1;
-
-	if(h1->compare != h2->compare)
-		return NULL;
-
-	if(h1->min_node == NULL)//h1->size  == 0
-	{
-		assert(h1->size == 0);
-		h1->min_node = h2->min_node;
-		h1->size = h2->size;
-		h1->max_degree = h2->max_degree;
-		free(h2);
-	}else if(h2->min_node == NULL)
-	{
-		assert(h2->size == 0);
-		free(h2);
-	}else
-	{
-		fibonacci_node_cat(h1->min_node,h2->min_node);
-
-		if(h1->compare(h1->min_node->key,h2->min_node->key) > 0)
-		   h1->min_node = h2->min_node;
-		h1->size += h2->size;
-		h1->max_degree = (h1->max_degree > h2->max_degree ? 
-				h1->max_degree:h2->max_degree);
-		free(h2);
-	}
-
-	return h1;
-}
 static void fibonacci_create_cons(c_fibonacci_heap_t *heap)
 {
 	if(heap == NULL)
@@ -200,7 +156,6 @@ static  fibonacci_node_t* fibonacci_heap_link(c_fibonacci_heap_t *heap,
 
 	return x;
 }
-
 static void fibonacci_consolidata(c_fibonacci_heap_t *heap)
 {
 	if(heap == NULL)
@@ -248,6 +203,260 @@ static void fibonacci_consolidata(c_fibonacci_heap_t *heap)
 	}
 
 }
+/*
+ *在堆从查找键值为key的节点
+ *
+ */
+static fibonacci_node_t *fibonacci_node_search(fibonacci_node_t *root,void *key,
+		int (*compare)(const void *,const void *))
+{
+	fibonacci_node_t *tmp = root;
+	fibonacci_node_t *p = NULL;
+
+	if(key == NULL)
+		return NULL;
+
+	if(root == NULL)
+		return root;
+
+	do
+	{
+		if(compare(tmp->key,key) == 0)
+		{
+			p = tmp;
+			break;
+		}else
+		{
+			p = fibonacci_node_search(root->child,key,compare);
+			if(p != NULL)
+				break;
+		}
+
+		tmp = tmp->right;
+	}while(tmp != root);
+
+	return p;
+}
+/*
+ *
+ *更新度数
+ */
+static void update_degree(fibonacci_node_t *parent,int degree)
+{
+	parent->degree -= degree;
+	if(parent->parent != NULL)
+		update_degree(parent->parent,degree);
+}
+
+/*
+ *
+ *将node从父节点parent的子链表剥离出来
+ *并添加到根链表节点中
+ */
+static void fibonacci_node_cut(c_fibonacci_heap_t *heap,fibonacci_node_t *node,
+		fibonacci_node_t *parent)
+{
+	  //从链表上移除
+		fibonacci_node_remove(node);
+
+		if(node == node->right)
+			parent->child = NULL; //父节点只有一个孩子
+		else
+			parent->child = node->right;
+		
+		node->parent = NULL;
+		node->right = node->left = node;//自省形成一个双向链表
+		node->marked = 0;
+		fibonacci_node_add(node,heap->min_node);
+}
+static void fibonacci_node_cascading_cut(c_fibonacci_heap_t *heap,fibonacci_node_t *node)
+{
+	fibonacci_node_t *parent = node->parent;
+	if(parent == NULL)
+		return;
+
+	if(node->marked == 0)
+		node->marked = 1;
+	else
+	{
+		fibonacci_node_cut(heap,node,parent);
+		fibonacci_node_cascading_cut(heap,parent);
+	}
+}
+
+/*
+ * 将菲薄那列堆heap中节点的值减少为key
+ */
+static void fibonacci_node_decreate(c_fibonacci_heap_t *heap,fibonacci_node_t *node,void *key)
+{ 
+	fibonacci_node_t *parent = NULL;
+	if(heap == NULL || heap->min_node == NULL || node == NULL)
+		return;
+
+	if(heap->compare(key,node->key) == 0)
+	{
+		printf("decreate failed:the new key ie equal the oldkey");
+		return;
+	}
+
+	node->key = key;
+	if(parent != NULL && heap->compare(node->key,parent->key) < 0)
+	{
+		/* 将node从父节点上剥离出来，并将node添加到根链表节点*/
+		fibonacci_node_cut(heap,node,parent);
+		fibonacci_node_cascading_cut(heap,parent);
+	}
+
+	if(heap->compare(node->key,heap->min_node->key) < 0)
+		heap->min_node = node->key;
+}
+static void fibonacci_node_increate(c_fibonacci_heap_t *heap,fibonacci_node_t *node,void *key)
+{
+	fibonacci_node_t *child = NULL;
+	fibonacci_node_t *parent = NULL;
+	fibonacci_node_t *right = NULL;
+	if(heap == NULL || heap->min_node == NULL || node == NULL)
+		return;
+
+	if(heap->compare(key,node->key) == 0)
+	{
+		printf("decreate failed:the new key ie equal the oldkey");
+ 		return;
+	}
+	/*将node节点的每一个child都添加到根链表节点当中去*/
+	while(node->child != NULL)
+	{
+		child = node->right;
+
+		fibonacci_node_remove(child);/*从child从node的孩子链表中移除*/
+		if(child->right == right)
+			node->child = NULL;
+		else
+			node->child = child->right;
+
+		fibonacci_node_add(child,heap->min_node);/*将node添加到根链表中去*/
+	}
+
+	node->key = node;
+	node->degree = 0;
+
+	parent = node->parent;
+	if(parent != NULL)
+	{
+		fibonacci_node_cut(heap,node,parent);
+		fibonacci_node_cascading_cut(heap,parent);
+	}
+}
+/*
+ *创建斐波那契堆 
+ */
+c_fibonacci_heap_t *c_fibonacci_heap_create(int (*compare)(const void *,const void*))
+{
+	c_fibonacci_heap_t *heap;
+	if(compare == NULL)
+	{
+		printf("compare not be null\n");
+		return NULL;
+	}
+
+	heap = (c_fibonacci_heap_t *)malloc(sizeof(c_fibonacci_heap_t));
+	if(heap == NULL)
+	{
+		printf("malloc c_fibonacci_heap_t failed\n");
+		return NULL;
+	}
+
+	heap->size = 0;
+	heap->max_degree = 0;
+	heap->min_node = NULL;
+	heap->cons = NULL;
+
+	return heap;
+}
+void c_fibonacci_heap_destroy(c_fibonacci_heap_t *heap)
+{
+	if(heap == NULL)
+		return;
+
+	fibonacci_node_destroy(heap->min_node);
+	if(heap->cons != NULL)
+		free(heap->cons);
+	free(heap);
+}
+int c_fibonacci_heap_insert(c_fibonacci_heap_t *heap,void *key)
+{
+	fibonacci_node_t *node = NULL;
+
+	if(heap == NULL || key == NULL)
+		return -1;
+
+	node = create_node(key);
+	if(node == NULL)
+		return -1;
+
+	if(heap->size == 0)
+		heap->min_node = node;
+	else
+	{
+		fibonacci_node_add(node,heap->min_node);
+		if(heap->compare(heap->min_node,node) > 0)
+			heap->min_node = node;
+	}
+	heap->size++;
+}
+c_fibonacci_heap_t* c_fibonacci_heap_union(c_fibonacci_heap_t *h1,
+		c_fibonacci_heap_t *h2)
+{
+  c_fibonacci_heap_t *new_heap = NULL;
+	if(h1 == NULL)
+		return h2;
+
+	if(h2 == NULL)
+		return h1;
+
+	if(h1->compare != h2->compare)
+		return NULL;
+
+	if(h1->max_degree < h2->max_degree)
+		return c_fibonacci_heap_union(h2,h1);
+
+	new_heap = c_fibonacci_heap_create(h1->compare);
+
+	if(h1->min_node != NULL && h2->min_node != NULL)
+	{
+		fibonacci_node_cat(h1->min_node,h2->min_node);
+
+		if(h1->compare(h1->min_node->key,h2->min_node->key) > 0)
+		   h1->min_node = h2->min_node;
+		h1->size += h2->size;
+		h1->max_degree = (h1->max_degree > h2->max_degree ? 
+				h1->max_degree:h2->max_degree);
+	}else if(h1->min_node == NULL)//h1->size  == 0
+	{
+		assert(h1->size == 0);
+		h1->min_node = h2->min_node;
+		h1->size = h2->size;
+		h1->max_degree = h2->max_degree;
+	}
+
+	new_heap->size = h1->size;
+	new_heap->max_degree = h1->max_degree;
+	new_heap->min_node = h1->min_node;
+	new_heap->cons = NULL;
+
+	if(h2->cons != NULL)
+		free(h2);
+	free(h2);
+	h2 == NULL;
+
+	if(h1->cons != NULL)
+		free(h1);
+	free(h1);
+	h1 = NULL;
+
+	return new_heap;
+}
+
 fibonacci_node_t * c_fibonacci_heap_remove(c_fibonacci_heap_t *heap)
 {
 	if(heap == NULL || heap->min_node == NULL)
@@ -297,40 +506,6 @@ void c_fibonacci_heap_get_min(c_fibonacci_heap_t *heap,void **rkey)
 	rkey = heap->min_node->key;
 }
 
-/*
- *在堆从查找键值为key的节点
- *
- */
-static fibonacci_node_t *fibonacci_node_search(fibonacci_node_t *root,void *key,
-		int (*compare)(const void *,const void *))
-{
-	fibonacci_node_t *tmp = root;
-	fibonacci_node_t *p = NULL;
-
-	if(key == NULL)
-		return NULL;
-
-	if(root == NULL)
-		return root;
-
-	do
-	{
-		if(compare(tmp->key,key) == 0)
-		{
-			p = tmp;
-			break;
-		}else
-		{
-			p = fibonacci_node_search(root->child,key,compare);
-			if(p != NULL)
-				break;
-		}
-
-		tmp = tmp->right;
-	}while(tmp != root);
-
-	return p;
-}
  fibonacci_node_t *fibonacci_heap_search(c_fibonacci_heap_t *heap,void *key)
 {
 	if(heap == NULL)
@@ -348,120 +523,7 @@ uint8_t fibonacci_heap_have_key(c_fibonacci_heap_t *heap,void *key)
 	return 1;
 }
 
-/*
- *
- *更新度数
- */
-static void update_degree(fibonacci_node_t *parent,int degree)
-{
-	parent->degree -= degree;
-	if(parent->parent != NULL)
-		update_degree(parent->parent,degree);
-}
 
-/*
- *
- *将node从父节点parent的子链表剥离出来
- *并添加到根链表节点中
- */
-static void fibonacci_node_cut(c_fibonacci_heap_t *heap,fibonacci_node_t *node,
-		fibonacci_node_t *parent)
-{
-	  //从链表上移除
-		fibonacci_node_remove(node);
-
-		if(node == node->right)
-			parent->child = NULL; //父节点只有一个孩子
-		else
-			parent->child = node->right;
-		
-		node->parent = NULL;
-		node->right = node->left = node;//自省形成一个双向链表
-		node->marked = 0;
-		fibonacci_node_add(node,heap->min_node);
-}
-
-static void fibonacci_node_cascading_cut(c_fibonacci_heap_t *heap,fibonacci_node_t *node)
-{
-	fibonacci_node_t *parent = node->parent;
-	if(parent == NULL)
-		return;
-
-	if(node->marked == 0)
-		node->marked = 1;
-	else
-	{
-		fibonacci_node_cut(heap,node,parent);
-		fibonacci_node_cascading_cut(heap,parent);
-	}
-}
-/*
- *
- * 将菲薄那列堆heap中节点的值减少为key
- * 
- */
-static void fibonacci_node_decreate(c_fibonacci_heap_t *heap,fibonacci_node_t *node,void *key)
-{ 
-	fibonacci_node_t *parent = NULL;
-	if(heap == NULL || heap->min_node == NULL || node == NULL)
-		return;
-
-	if(heap->compare(key,node->key) == 0)
-	{
-		printf("decreate failed:the new key ie equal the oldkey");
-		return;
-	}
-
-	node->key = key;
-	if(parent != NULL && heap->compare(node->key,parent->key) < 0)
-	{
-		//将node从父节点上剥离出来，并将node添加到根链表节点
-		fibonacci_node_cut(heap,node,parent);
-		fibonacci_node_cascading_cut(heap,parent);
-	}
-
-	if(heap->compare(node->key,heap->min_node->key) < 0)
-		heap->min_node = node->key;
-
-}
-
-static void fibonacci_node_increate(c_fibonacci_heap_t *heap,fibonacci_node_t *node,void *key)
-{
-	fibonacci_node_t *child = NULL;
-	fibonacci_node_t *parent = NULL;
-	fibonacci_node_t *right = NULL;
-	if(heap == NULL || heap->min_node == NULL || node == NULL)
-		return;
-
-	if(heap->compare(key,node->key) == 0)
-	{
-		printf("decreate failed:the new key ie equal the oldkey");
- 		return;
-	}
-	/*将node节点的每一个child都添加到根链表节点当中去*/
-	while(node->child != NULL)
-	{
-		child = node->right;
-
-		fibonacci_node_remove(child);/*从child从node的孩子链表中移除*/
-		if(child->right == right)
-			node->child = NULL;
-		else
-			node->child = child->right;
-
-		fibonacci_node_add(child,heap->min_node);/*将node添加到根链表中去*/
-	}
-
-	node->key = node;
-	node->degree = 0;
-
-	parent = node->parent;
-	if(parent != NULL)
-	{
-		fibonacci_node_cut(heap,node,parent);
-		fibonacci_node_cascading_cut(heap,parent);
-	}
-}
 void fibonacci_node_update(c_fibonacci_heap_t *heap,void *oldkey,void *newkey)
 {
 	 fibonacci_node_t *node = NULL;
