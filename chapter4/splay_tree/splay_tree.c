@@ -3,16 +3,58 @@
 #include<malloc.h>
 #include"splay_tree.h"
 
+#ifdef DEBUG
+static int check_splay_node(c_tree_t *tree,c_splay_node_t *node)
+{
+	int count = 1;
+	if(node->left != NULL)
+	{
+		assert(node->left->parent == node);
+		if(tree->compare(node->left->key,node->key) < 0)
+			count += count(tree,node->left);
+  }
 
-/*         (x)                            (y)
- *        /   \                          /   \
- *    (y)     (c)											 (a)    (x) 
- *   /    \                                  /    \
- * (a)    (b)																 b     c
- *  右旋
- *
- */
+	if(node->right != NULL)
+	{
+		assert(node->right->parent == node);
+		if(tree->compare(node->right->key,node->key) > 0)
+			count += count(tree,node->right);
+	}
 
+	return count;
+}
+#endif 
+
+static void check_splay_tree(c_splay_tree_t *tree)
+{
+#ifdef DEBUG
+	if(tree->root == NULL)
+		assert(root->size == 0);
+	else
+		assert(root->size == check_splay_tree(tree,node));
+#endif
+}
+
+static c_splay_node_t* left_max(c_splay_node_t *node)
+{
+	if(node == NULL)
+		return NULL;
+	
+	while(node->right != NULL)
+		node = node->right;
+
+	return node;
+}/* max value in the node left tree*/
+static c_splay_node_t* right_min(c_splay_node_t *node)
+{
+	if(node == NULL)
+		return NULL;
+	
+	while(node->right != NULL)
+		node = node->right;
+
+	return node;
+}/* min value in the node right tree*/
 static void free_node(c_splay_node_t *node)
 {
 	if(node == NULL)
@@ -25,9 +67,18 @@ static void free_node(c_splay_node_t *node)
 
 	free(node);
 }
-static c_splay_node_t* rotate_right(c_splay_tree_t *splay_tree,c_splay_node_t *node_x)
+/*         (x)                            (y)
+ *        /   \                          /   \
+ *    (y)     (c)											 (a)    (x) 
+ *   /    \                                  /    \
+ * (a)    (b)																 b     c
+ *  右旋
+ *
+ */
+
+static c_splay_node_t* rotate_right(c_splay_tree_t *tree,c_splay_node_t *node_x)
 {
-	assert(splay_tree != NULL && node_x != NULL && node_x->left != NULL);
+	assert(tree != NULL && node_x != NULL && node_x->left != NULL);
 
 	c_splay_node_t *node_y;
 	c_splay_node_t *node_parent;
@@ -48,7 +99,7 @@ static c_splay_node_t* rotate_right(c_splay_tree_t *splay_tree,c_splay_node_t *n
 
 	assert(node_parent == NULL || node_parent->left == node_x || node_parent->right == node_x);
 		if(node_parent == NULL)
-			splay_tree->root = node_y;
+			tree->root = node_y;
 		else if(node_parent->left == node_x)
 			node_parent->left = node_y;
 		else
@@ -63,9 +114,9 @@ static c_splay_node_t* rotate_right(c_splay_tree_t *splay_tree,c_splay_node_t *n
  *      /   \               /   \
  *    (b)   (c)            a     b 
  */
-static c_splay_node_t* rotate_left(c_splay_tree_t *splay_tree, c_splay_node_t *node_x)
+static c_splay_node_t* rotate_left(c_splay_tree_t *tree, c_splay_node_t *node_x)
 { 
-	assert(splay_tree != NULL && node_x != NULL && node_x->right!= NULL);
+	assert(tree != NULL && node_x != NULL && node_x->right!= NULL);
 
 	c_splay_node_t *node_y;
 	c_splay_node_t *node_parent;
@@ -86,7 +137,7 @@ static c_splay_node_t* rotate_left(c_splay_tree_t *splay_tree, c_splay_node_t *n
 
 	assert(node_parent == NULL || node_parent->left == node_x || node_parent->right == node_x);
 	if(node_parent == NULL)
-		splay_tree->root = node_y;
+		tree->root = node_y;
 	else if(node_parent->left == node_x)
 		node_parent->left = node_y;
 	else 
@@ -103,13 +154,13 @@ static c_splay_node_t* rotate_left(c_splay_tree_t *splay_tree, c_splay_node_t *n
  *      (b)  (c)         (a)    (b)
  *
  */
-static c_splay_node_t* right_zig_zag(c_splay_tree_t *splay_tree, c_splay_node_t *node_x)
+static c_splay_node_t* right_zig_zag(c_splay_tree_t *tree, c_splay_node_t *node_x)
 {
-	assert(splay_tree != NULL && node_x != NULL && 
+	assert(tree != NULL && node_x != NULL && 
 			node_x->left != NULL && node_x->left->right != NULL);
 
-	rotate_left(splay_tree,node_x->left);
-	return rotate_right(splay_tree,node_x);
+	rotate_left(tree,node_x->left);
+	return rotate_right(tree,node_x);
 }
 
 
@@ -123,13 +174,13 @@ static c_splay_node_t* right_zig_zag(c_splay_tree_t *splay_tree, c_splay_node_t 
  *先左旋,在右旋
  * 
  */
-static c_splay_node_t* left_zig_zag(c_splay_tree_t *splay_tree, c_splay_node_t *node_x)
+static c_splay_node_t* left_zig_zag(c_splay_tree_t *tree, c_splay_node_t *node_x)
 {
-	assert(splay_tree != NULL && node_x != NULL && 
+	assert(tree != NULL && node_x != NULL && 
 			node_x->right!= NULL && node_x->right->left != NULL);
 
-	rotate_right(splay_tree,node_x->right);
-	return rotate_left(splay_tree,node_x);
+	rotate_right(tree,node_x->right);
+	return rotate_left(tree,node_x);
 }
 
 /*
@@ -145,68 +196,68 @@ static c_splay_node_t* left_zig_zag(c_splay_tree_t *splay_tree, c_splay_node_t *
  */
  
 /* left zig-zig */
-static c_splay_node_t* right_zig_zig(c_splay_tree_t *splay_tree,c_splay_node_t *node_x)
+static c_splay_node_t* right_zig_zig(c_splay_tree_t *tree,c_splay_node_t *node_x)
 {
-	assert(splay_tree != NULL && node_x != NULL && 
+	assert(tree != NULL && node_x != NULL && 
 			node_x->left != NULL && node_x->left->left != NULL);
 
-	c_splay_node_t *node_y  = rotate_right(splay_tree,node_x);
-	return rotate_right(splay_tree,node_y);
+	c_splay_node_t *node_y  = rotate_right(tree,node_x);
+	return rotate_right(tree,node_y);
 }
 
-static c_splay_node_t* left_zig_zig(c_splay_tree_t *splay_tree,
+static c_splay_node_t* left_zig_zig(c_splay_tree_t *tree,
 		c_splay_node_t *node_x)
 {
-	assert(splay_tree != NULL && node_x != NULL && 
+	assert(tree != NULL && node_x != NULL && 
 			node_x->right != NULL && node_x->right->right != NULL);
 
-	c_splay_node_t *node_y = rotate_right(splay_tree,node_x);
-	return rotate_right(splay_tree,node_y);
+	c_splay_node_t *node_y = rotate_right(tree,node_x);
+	return rotate_right(tree,node_y);
 }
-static c_splay_node_t* deal_with_grand_parent(c_splay_tree_t *splay_tree,
-		c_splay_node_t *splay_node)
+static c_splay_node_t* deal_with_grand_parent(c_splay_tree_t *tree,
+		c_splay_node_t *node)
 {
 	c_splay_node_t *parent;
 	c_splay_node_t *grand_parent;
 
-	assert(splay_tree != NULL && splay_node != NULL && 
-			splay_node->parent != NULL && splay_node->parent->parent != NULL);
+	assert(tree != NULL && node != NULL && 
+			node->parent != NULL && node->parent->parent != NULL);
 
-	parent = splay_node->parent;
+	parent = node->parent;
 	grand_parent= parent->parent;
 
-	if(grand_parent->left->left == splay_node)
-		return right_zig_zig(splay_tree,grand_parent);
-	else if(grand_parent->right->right == splay_node)
-		return left_zig_zig(splay_tree,grand_parent);
-	else if(grand_parent->left->right == splay_node)
-		return right_zig_zag(splay_tree,grand_parent);
+	if(grand_parent->left->left == node)
+		return right_zig_zig(tree,grand_parent);
+	else if(grand_parent->right->right == node)
+		return left_zig_zig(tree,grand_parent);
+	else if(grand_parent->left->right == node)
+		return right_zig_zag(tree,grand_parent);
 	else
-		return left_zig_zag(splay_tree,grand_parent);
+		return left_zig_zag(tree,grand_parent);
 }
 
-static void splay_the_tree(c_splay_tree_t *splay_tree,c_splay_node_t *splay_node)
+static void splay_the_tree(c_splay_tree_t *tree,c_splay_node_t *node)
 {
-	while(splay_node->parent != splay_tree->root)
-		splay_node = deal_with_grand_parent(splay_tree,splay_node);
+	while(node->parent != tree->root)
+		node = deal_with_grand_parent(tree,node);
 
-	if(splay_tree->root->left == splay_node)
-		rotate_right(splay_tree,splay_node);
-	else if(splay_tree->root->right == splay_node)
-		rotate_left(splay_tree,splay_node);
-	else if(splay_tree->root == splay_node)
+	if(tree->root->left == node)
+		rotate_right(tree,node);
+	else if(tree->root->right == node)
+		rotate_left(tree,node);
+	else if(tree->root == node)
 		return;
 }
 
-static c_splay_node_t *search(c_splay_tree_t *splay_tree,const void *key)
+static c_splay_node_t *search(c_splay_tree_t *tree,const void *key)
 {
 	c_splay_node_t *node;
 	int cmp;
 
-	node = splay_tree->root;
+	node = tree->root;
 	while(node != NULL)
 	{
-		cmp = splay_tree->compare(node->key,key);
+		cmp = tree->compare(node->key,key);
 		if(cmp == 0)
 			break;
 		else if(cmp < 0) // node->key < key
@@ -233,6 +284,7 @@ c_splay_tree_t *c_splay_create(int (*compare)(const void *,const void *))
 
 	tree->root = NULL;
 	tree->compare = compare;
+	tree->size = 0;
 
 	return tree;
 }/* c_splay_tree_t *c_splay_create  */
@@ -247,7 +299,7 @@ void c_splay_destory(c_splay_tree_t *tree)
 }/* void c_splay_destory */
 
 
-int c_splay_insert(c_splay_tree_t *splay_tree,void *key,void *value)
+int c_splay_insert(c_splay_tree_t *tree,void *key,void *value)
 {
 	c_splay_node_t *new;
 	c_splay_node_t *index;
@@ -265,23 +317,23 @@ int c_splay_insert(c_splay_tree_t *splay_tree,void *key,void *value)
 	new->right = NULL;
 	new->parent = NULL;
 
-	if( splay_tree->root == NULL )
+	if( tree->root == NULL )
 	{
 		new->parent == NULL;
-		splay_tree->root = new;
-		splay_tree->size = 1;
+		tree->root = new;
+		tree->size = 1;
 		return 0;
 	}
 
-	index = splay_tree->root;
+	index = tree->root;
 
 	while(1)
 	{
-		comp = splay_tree->compare(index->key,new->key);
+		comp = tree->compare(index->key,new->key);
 		if(comp == 0)
 		{
 			free_node(new);
-			splay_the_tree(splay_tree,index);
+			splay_the_tree(tree,index);
 			return 1;
 		}else if(comp < 0)
 		{
@@ -289,7 +341,6 @@ int c_splay_insert(c_splay_tree_t *splay_tree,void *key,void *value)
 			{
 				index->right = new;
 				new->parent = index;
-				splay_the_tree(splay_tree,new);
 				break;
 			}else
 			{
@@ -301,7 +352,6 @@ int c_splay_insert(c_splay_tree_t *splay_tree,void *key,void *value)
 			{
 				index->left = new;
 				new->parent = index;
-				splay_the_tree(splay_tree,new);	
 				break;
 			}else
 			{
@@ -310,31 +360,34 @@ int c_splay_insert(c_splay_tree_t *splay_tree,void *key,void *value)
 		}
 	}/*while(1)*/
 
+	splay_the_tree(tree,new);
+	tree->size++;
+	check_splay_tree(tree);
 	return 0;
 }
-int c_splay_get(c_splay_tree_t *splay_tree, const void *key, void **value) {
+int c_splay_get(c_splay_tree_t *tree, const void *key, void **value) {
 	c_splay_node_t *node;
 
-	assert(splay_tree != NULL);
+	assert(tree != NULL);
 
-	node = search(splay_tree, key);
+	node = search(tree, key);
 	if (node == NULL)
 		return -1;
 
 	if (value != NULL)
 		*value = node->value;
 
-	splay_the_tree(splay_tree,node);
+	splay_the_tree(tree,node);
 	return 0;
 }
-int c_splay_remove(c_splay_tree_t *splay_tree,const void *key,const void **rkey,const void **result)
+int c_splay_remove(c_splay_tree_t *tree,const void *key,const void **rkey,const void **rvalue)
 {
 	c_splay_node_t *node;
 	c_splay_node_t *new_root;
 
-	assert(splay_tree != NULL);
+	assert(tree != NULL);
 
-	node = search(splay_tree, key);
+	node = search(tree, key);
 	if (node == NULL)
 		return;
 
@@ -343,29 +396,33 @@ int c_splay_remove(c_splay_tree_t *splay_tree,const void *key,const void **rkey,
 	if (rvalue != NULL)
 		*rvalue = node->value;
 
-	if(node->left == NULL && node->right == NULL)
+	splay_the_tree(tree,node);
+	if(node->left == NULL)
 	{
-		splay_tree->root == NULL;
+		tree->root = node->right;
+		if(node->right != NULL)
+			node->right->parent = NULL;
 		free_node(node);
-	}else
+	}else if(node->right == NULL)
 	{
-		splay_tree(splay_tree,node);
+		tree->root = node->left;
+		if(node->left != NULL)
+			node->left->parent = NULL;	
+		free_node(node);
+	}else{
+		c_splay_node_t *lmax = left_max(node->left);/* get max value in the node left tree*/
+		node->value = lmax->value;
+		node->key = lmax->key;
+
 		if(node->left != NULL)
 		{
-			new_root = node->left;
-			while(new_root->left != NULL)
-				new_root = new_root->left;
-
-			new_root-
+			lmax->parent->right = lmax->left;
+			lmax->left->parent = lmax->parent;
 		}
+		free_node(lmax);
 	}
-	
-	
+
+	tree->size--;
+	check_splay_tree(tree);
 }
 
-
-
-int main()
-{
-	return 0;
-}
