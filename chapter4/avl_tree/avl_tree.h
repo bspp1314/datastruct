@@ -30,7 +30,6 @@ void c_avl_destroy(c_avl_tree_t *avl_tree);
 int  c_avl_insert(c_avl_tree_t *avl_tree,void *key,void *value);
 int  c_avl_remove(c_avl_tree_t *avl_tree,const *key,void **rkey,void **rvalue);
 int  c_avl_get(c_avl_tree_t *avl_tree,const *key,void **rvalue);
-int c_avl_pick(c_avl_tree_t *t, void **key, void **value);
-int calc_height(c_avl_node_t *node);
+int	 c_avl_pick(c_avl_tree_t *t, void **key, void **value);
 
 #endif

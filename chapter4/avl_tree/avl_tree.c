@@ -4,9 +4,7 @@
 
 #include"avl_tree.h"
 
-#define BALANCE(n)                                                             \
-	((((n)->left == NULL) ? 0 : (n)->left->height) -                             \
-	 (((n)->right == NULL) ? 0 : (n)->right->height))
+
 static int calc_balance(c_avl_node_t *avl_node)
 {
 	int left_height = (avl_node->left == NULL) ? 0 : avl_node->left->height;
@@ -47,7 +45,7 @@ static void free_node(c_avl_node_t *avl_node)
 	avl_node = NULL;
 }
 
-int calc_height(c_avl_node_t *node)
+static int calc_height(c_avl_node_t *node)
 {
 	if(node == NULL)
 		return 0;
@@ -263,50 +261,6 @@ static void rebalance(c_avl_tree_t *avl_tree,c_avl_node_t *avl_node)
 		avl_node = avl_node->parent;
 	}
 }
-
-#if 0
-static void rebalance(c_avl_tree_t *t, c_avl_node_t *n) {
-	int b_top;
-	int b_bottom;
-
-	while (n != NULL) {
-		b_top = BALANCE(n);
-		assert((b_top >= -2) && (b_top <= 2));
-
-		if (b_top == -2) {
-			assert(n->right != NULL);
-			b_bottom = BALANCE(n->right);
-			assert((b_bottom >= -1) && (b_bottom <= 1));
-			if (b_bottom == 1)
-				n = rotate_right_left(t, n);
-			else
-				n = rotate_left(t, n);
-
-		} else if (b_top == 2) {
-			assert(n->left != NULL);
-			b_bottom = BALANCE(n->left);
-			assert((b_bottom >= -1) && (b_bottom <= 1));
-			if (b_bottom == -1)
-				n = rotate_left_right(t, n);
-			else
-				n = rotate_right(t, n);
-
-		} else {
-			int height = calc_height(n);
-			if (height == n->height)
-				break;
-			n->height = height;
-
-		}
-
-		assert(n->height == calc_height(n));
-
-		n = n->parent;
-
-	} /* while (n != NULL) */
-
-} /* void rebalance */
-#endif
 
 c_avl_tree_t* c_avl_create(int(*compare)(const void *,const void *))
 {

@@ -32,13 +32,10 @@ int main(){
 	{
 		int *p = (int *)malloc(sizeof(int));
 		*p = i;
-		printf("%d\n",*p);
 		c_avl_insert(data_sets,(void*)p,NULL);
 	}
 	printf("root value is %d\n",*((int *)data_sets->root->key));
-	printf("root height is %d\n",calc_height(data_sets->root));
 	
-
 	int *p;
 	while(c_avl_pick(data_sets,(void **)&p,NULL) == 0)
 	{
