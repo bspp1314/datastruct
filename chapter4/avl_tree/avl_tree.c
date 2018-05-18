@@ -33,8 +33,7 @@ static void verify_tree(c_avl_tree_t *avl_tree)
 	verify_node(avl_tree->root);
 }
 
-static void 
-free_node(c_avl_node_t *avl_node)
+static void free_node(c_avl_node_t *avl_node)
 {
 	if(avl_node == NULL)
 		return;
@@ -390,7 +389,7 @@ static c_avl_node_t *c_avl_node_next(c_avl_node_t *avl_node)
 	return result_node;
 }/*采用中序(左中右)遍历获取下一个节点*/
 
-static c_avl_node_t * c_avl_node_pre(c_avl_node_t *avl_node)
+static c_avl_node_t * c_avl_node_prev(c_avl_node_t *avl_node)
 {
 	c_avl_node_t *result_node;
 
@@ -439,7 +438,7 @@ static int _remove(c_avl_tree_t *avl_tree,c_avl_node_t *avl_node)
 				r_node = r_node->right;
 		}else{
 			assert(avl_node->right != NULL);
-				r_node = avl_node->right;
+			r_node = avl_node->right;
 			while(r_node->left != NULL)
 				r_node = r_node->right;	
 		}
@@ -538,6 +537,84 @@ int c_avl_remove(c_avl_tree_t *avl_tree,const *key,void **rkey,void **rvalue)
 	verify_tree(avl_tree);
 	avl_tree->size--;
 	return status;
+}
+int  c_avl_get(c_avl_tree_t *avl_tree,const *key,void **rvalue)
+{
+	c_avl_node_t *n;
+
+	assert(avl_tree != NULL);
+
+	n =  search_tree(avl_tree,key);
+	if(n == NULL)
+		return -1;
+
+	if(rvalue != NULL)
+		*rvalue = n->value;
+
+	return 0;
+}
+c_avl_iterator_t *c_avl_get_iterator(c_avl_tree_t *avl_tree) 
+{
+	c_avl_iterator_t *iter;
+
+	if (avl_tree == NULL)
+		return NULL;
+
+	iter = (c_avl_iterator_t *)malloc( sizeof(c_avl_iterator_t));
+	if (iter == NULL)
+		return NULL;
+	iter->tree = avl_tree;
+
+	return iter;
+
+} /* 迭代器 */
+int c_avl_iterator_next(c_avl_iterator_t *iter, void **key, void **value) 
+{
+		c_avl_node_t *node;
+		if ((iter == NULL) || (key == NULL) || (value == NULL))
+					return -1;
+
+		if(iter->node == NULL)
+		{
+			node = iter->tree->root;
+			while(node->left != NULL)
+				node = node->left;
+		}else{
+			node  = c_avl_node_next(iter->node);
+		}
+
+		if(node == NULL)
+			return -1;
+
+		iter->node = node;
+		*key = node->key;
+		*value = node->value;
+
+		return 0;
+}
+int c_avl_iterator_prev(c_avl_iterator_t *iter, void **key, void **value) 
+{
+		c_avl_node_t *node;
+		if ((iter == NULL) || (key == NULL) || (value == NULL))
+					return -1;
+
+		if(iter->node == NULL)
+		{
+			node = iter->tree->root;
+			while(node->right != NULL)
+				node = node->right;
+		}else{
+			node  = c_avl_node_prev(iter->node);
+		}
+
+		if(node == NULL)
+			return -1;
+
+		iter->node = node;
+		*key = node->key;
+		*value = node->value;
+
+		return 0;
 }
 
 int main(){
