@@ -3,4 +3,5 @@ rbtree:$(objects)
 	  gcc -o rbtree  $(objects)
 .PHONY:clean
 clean :
-	  rm -rf *.o 
+	  rm -rf *.o
+		rm -rf rbtree

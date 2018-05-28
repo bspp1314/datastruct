@@ -10,8 +10,8 @@ static c_rb_node_t* rotate_right(c_rb_tree_t *tree,c_rb_node_t *node_x);
 static c_rb_node_t* rotate_left(c_rb_tree_t *tree, c_rb_node_t *node_x);
 static void c_rbtree_insert_fixup(c_rb_tree_t *tree, c_rb_node_t *node);
 
-#define rbnode_set_black(rbnode)   ((rbnode)->color = BLACK)
-#define rbnode_set_red(rbnode)     ((rbnode)->color = RED)
+//#define rbnode_set_black(rbnode)   ((rbnode)->color = BLACK)
+//#define rbnode_set_red(rbnode)     ((rbnode)->color = RED)
 
 //#ifdef LLD
 //#define rbnode_is_red(rbnode)   \
@@ -19,6 +19,21 @@ static void c_rbtree_insert_fixup(c_rb_tree_t *tree, c_rb_node_t *node);
 //#define rbnode_is_black(rbnode)   \
 //	rbnode == NULL ? 1:(rbnode->color == BLACK)
 //#endif
+//
+
+void static rbnode_set_red(c_rb_node_t *rbnode)
+{
+	if(rbnode == NULL)
+		return;
+	rbnode->color = RED;
+}
+static  rbnode_is_red(c_rb_node_t *rbnode)
+void static rbnode_set_black(c_rb_node_t *rbnode)
+{
+	if(rbnode == NULL)
+		return;
+	rbnode->color = BLACK;
+}
 static  rbnode_is_red(c_rb_node_t *rbnode)
 {
 	return rbnode == NULL ? 0:(rbnode->color == RED);
@@ -94,48 +109,72 @@ static c_rb_node_t *search_tree(c_rb_tree_t *rbtree, const void *key)
 
 	return search_node(rbtree->root,key,rbtree->compare);
 }
-static c_rb_node_t* rotate_right(c_rb_tree_t *tree,c_rb_node_t *node_x)
+/*         (x)                            (y)
+ *        /   \                          /   \
+ *    (3y)     (1c)                   (2a)    (2x) 
+ *   /    \                                  /    \
+ * (2a)    (1b)                            1b     1c
+ *  右旋
+ *
+ */
+static c_rb_node_t* rotate_right(c_rb_tree_t *rb_tree, c_rb_node_t *node_x)
 {
+	c_rb_node_t *node_y = NULL;
+	c_rb_node_t *node_b = NULL;
+	c_rb_node_t *node_parent = NULL;
 
-	c_rb_node_t *node_y;
-	c_rb_node_t *node_parent;
-	c_rb_node_t *node_b;
+	if(node_x == NULL || rb_tree == NULL || node_x->left == NULL)
+		printf("rotate_right error \n");
+
+	assert(node_x != NULL);
+	assert(rb_tree != NULL);
+	assert(node_x->left !=  NULL);
 
 	node_y = node_x->left;
-	node_parent = node_x->parent;
 	node_b = node_y->right;
-
-	node_x->left = node_b;
-	node_x->parent = node_y;
+	node_parent = node_x->parent;
 
 	node_y->right = node_x;
 	node_y->parent = node_parent;
 
-	if(node_b != NULL)
-		node_b->parent = node_y;
+	node_x->left = node_b;
+	node_x->parent = node_y;
 
-	if(node_parent == NULL)
-		tree->root = node_y;
-	else if(node_parent->left == node_x)
-		node_parent->left = node_y;
+	if(node_b != NULL)
+		node_b->parent = node_x;
+
+	assert((node_parent == NULL) || (node_parent->left == node_x) || (node_parent->right) == node_x);
+	if( node_parent == NULL)
+		rb_tree->root = node_y;
 	else
-		node_parent->right = node_y;
+	{
+		if(node_parent->left == node_x)
+			node_parent->left = node_y;
+		else 
+			node_parent->right = node_y;
+	}
 
 	return node_y;
 }
 /*
  *    (x)                        (y)             
  *   /   \                      /   \
- *(a)    (y)                 (x)    (c)
- *      /   \               /   \
- *    (b)   (c)            a     b 
+ *(1a)    (3y)              (2x)     (2c)
+ *        /   \            /    \
+ *       (1b)  (2c)      1a     1b 
  */
-static c_rb_node_t* rotate_left(c_rb_tree_t *tree, c_rb_node_t *node_x)
+static c_rb_node_t* rotate_left(c_rb_tree_t *rb_tree, c_rb_node_t *node_x)
 { 
-
 	c_rb_node_t *node_y;
 	c_rb_node_t *node_parent;
 	c_rb_node_t *node_b;
+
+	if(node_x == NULL || rb_tree == NULL || node_x->right == NULL)
+		printf("rotate_left error \n");
+
+	assert(node_x != NULL);
+	assert(rb_tree != NULL);
+	assert(node_x->right !=  NULL);
 
 	node_y = node_x->right;
 	node_parent = node_x->parent;
@@ -150,20 +189,21 @@ static c_rb_node_t* rotate_left(c_rb_tree_t *tree, c_rb_node_t *node_x)
 	if(node_b != NULL)
 		node_b->parent = node_x;
 
-	if(node_parent == NULL)
-		tree->root = node_y;
-	else if(node_parent->left == node_x)
-		node_parent->left = node_y;
-	else 
-		node_parent->right = node_y;
+	assert((node_parent == NULL) || (node_parent->left == node_x) || (node_parent->right) == node_x);
+
+	if( node_parent == NULL)
+		rb_tree->root = node_y;
+	else
+	{
+		if(node_parent->left == node_x)
+			node_parent->left = node_y;
+		else 
+			node_parent->right = node_y;
+	}
 
 	return node_y;
 }
-/*case1
- *      ()
- *
- *
- */
+
 static void insert_fixup(c_rb_tree_t *tree, c_rb_node_t *node)
 {
 	c_rb_node_t *parent;
@@ -183,7 +223,7 @@ static void insert_fixup(c_rb_tree_t *tree, c_rb_node_t *node)
 				if(node == parent->right) {/* case 2 p is read u:black,node is right child */
 					node = parent;
 					rotate_left(tree,node);
-					parent = parent->parent;
+					parent = node->parent;
 				}
 				/* case 3  p red u black node is left */
 				rbnode_set_black(parent);
@@ -200,7 +240,7 @@ static void insert_fixup(c_rb_tree_t *tree, c_rb_node_t *node)
 				if(node == parent->left){
 					node = parent;
 					rotate_right(tree,node);
-					parent = parent->parent;
+					parent = node->parent;
 				}
 				rbnode_set_black(parent);
 				rbnode_set_red(parent->parent);
@@ -284,7 +324,6 @@ int c_rbtree_insert(c_rb_tree_t *tree,void *key,void *value)
 			}	
 		}
 	}
-	// 如果当前节点父节点为黑色的话，就什么都不用做
 	new->left = NULL;
 	new->right = NULL;
 	if(rbnode_is_red(new->parent))
@@ -441,10 +480,10 @@ static void _remove(c_rb_tree_t *rbtree,c_rb_node_t *node)
 
 	if((node->left != NULL) && (node->right != NULL))
 	{
-		c_rb_node_t *max = c_rb_subtree_max(node->left);
-		node->key = max->key;
-		node->value = max->value;
-		node = max;
+		c_rb_node_t *min = c_rb_subtree_min(node->right);
+		node->key = min->key;
+		node->value = min->value;
+		node = min;
 	}
 
 	if((node->left == NULL) && (node->right == NULL))

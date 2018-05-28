@@ -28,11 +28,11 @@ int main(){
 	if(data_sets == NULL)
 		return -1;
 
-	int p1 = 4;
+	int p1 = 10;
 	int p2 = 5;
-	int p3 = 8;
-	int p4 = 10;
-	int p5 = 20;
+	int p3 = 20;
+	int p4 = 33;
+	int p5 = 44;
 	int p6 = 19;
 	int p7 = 78;
 	int p8 = 34;
@@ -47,8 +47,27 @@ int main(){
 	c_rbtree_insert(data_sets,(void*)&p7,NULL);
 	c_rbtree_insert(data_sets,(void*)&p8,NULL);
 	c_rbtree_insert(data_sets,(void*)&p9,NULL);
+
 	printf("root value is %d\n",*((int *)data_sets->root->key));
+	printf("root->left value is %d\n",*((int *)data_sets->root->left->key));
+	printf("root->left->left value is %d\n",*((int *)data_sets->root->left->left->key));
+	printf("root->right value is %d\n",*((int *)data_sets->root->right->key));
+	printf("root->right->right->left value is %d\n",*((int *)data_sets->root->right->left->key));
+	printf("root->right->right->left->left value is %d\n",*((int *)data_sets->root->right->left->left->key));
+	printf("root->right->right->right value is %d\n",*((int *)data_sets->root->right->right->key));
+	printf("root->right->right->right->left value is %d\n",*((int *)data_sets->root->right->right->left->key));
+	printf("root->right->right->right->right value is %d\n",*((int *)data_sets->root->right->right->right->key));
 	
+	c_rbtree_remove1(data_sets,(void*)&p4,NULL,NULL);
+
+	printf("root value is %d\n",*((int *)data_sets->root->key));
+	printf("root->left value is %d\n",*((int *)data_sets->root->left->key));
+	printf("root->left->left value is %d\n",*((int *)data_sets->root->left->left->key));
+	printf("root->right value is %d\n",*((int *)data_sets->root->right->key));
+	printf("root->right->->left value is %d\n",*((int *)data_sets->root->right->left->key));
+	printf("root->right->left->left->value is %d\n",*((int *)data_sets->root->right->left->left->key));
+	printf("root->right->right->right value is %d\n",*((int *)data_sets->root->right->right->key));
+	printf("root->right->right->right->right value is %d\n",*((int *)data_sets->root->right->right->right->key));
 	c_rbtree_destroy(data_sets);
 	return 0;
 
