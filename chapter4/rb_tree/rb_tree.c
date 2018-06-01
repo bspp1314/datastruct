@@ -27,7 +27,7 @@ void static rbnode_set_red(c_rb_node_t *rbnode)
 		return;
 	rbnode->color = RED;
 }
-static  rbnode_is_red(c_rb_node_t *rbnode)
+
 void static rbnode_set_black(c_rb_node_t *rbnode)
 {
 	if(rbnode == NULL)
@@ -516,7 +516,7 @@ static void _remove(c_rb_tree_t *rbtree,c_rb_node_t *node)
 		remove_fixup(rbtree,node);
 
 }
-void c_rbtree_remove1(c_rb_tree_t *rbtree,const *key,void **rkey,void **rvalue)
+void c_rbtree_remove1(c_rb_tree_t *rbtree,void const *key,void **rkey,void **rvalue)
 {
 	c_rb_node_t *node;
 
