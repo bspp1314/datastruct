@@ -5,21 +5,58 @@
 
 /* the NULL node of tree */
 #define _NULL(rbtree) (&((rbtree)->null))
+/*每个结点要么是红的要么是黑的。  
+ *根结点是黑的。  
+ *每个叶结点（叶结点即指树尾端NIL指针或NULL结点）都是黑的。  
+ *如果一个结点是红的，那么它的两个儿子都是黑的。  
+ *对于任意结点而言，其到叶结点树尾端NIL指针的每条路径都包含相同数目的黑结点。 
+ *
+ */
 
-static c_rb_node_t* rotate_right(c_rb_tree_t *tree,c_rb_node_t *node_x);
-static c_rb_node_t* rotate_left(c_rb_tree_t *tree, c_rb_node_t *node_x);
-static void c_rbtree_insert_fixup(c_rb_tree_t *tree, c_rb_node_t *node);
+static int verif_rb_node(c_rb_tree_t *tree,c_rb_node_t *node)
+{
+	
+#ifdef RB_TREE_DEBUG
+	printf("RB_TREE_DEBUG\n");
+	int black_num_left = 0;
+	int black_num_right = 0;
+	if(node != NULL)
+	{
+		if(node->color == RED)
+		{
+			assert(node != tree->root);
+			assert(node->parent != NULL);
+			assert(node->parent->color == BLACK);	
+			if(node->left != NULL)
+				assert(node->left->color == BLACK);
+			if(node->right != NULL)
+				assert(node->right->color == BLACK);
+		}else
+		{
+			if(node->left != NULL)
+				assert(tree->compare(node->key,node->left->key) > 0);
 
-//#define rbnode_set_black(rbnode)   ((rbnode)->color = BLACK)
-//#define rbnode_set_red(rbnode)     ((rbnode)->color = RED)
+			if(node->right != NULL)
+				assert(tree->compare(node->key,node->right->key) < 0);
 
-//#ifdef LLD
-//#define rbnode_is_red(rbnode)   \
-//	(rbnode == NULL) ? 0:(rbnode->color == RED)
-//#define rbnode_is_black(rbnode)   \
-//	rbnode == NULL ? 1:(rbnode->color == BLACK)
-//#endif
-//
+		}
+		black_num_left = verif_rb_node(tree,node->left);
+		black_num_right = verif_rb_node(tree,node->right);
+		assert(black_num_left == black_num_right);
+		return node->color == BLACK ? black_num_left + 1 : black_num_left;
+	}
+	return 1;
+#else
+	return 0;
+#endif	
+}
+
+static void  verif_rb_tree(c_rb_tree_t *tree)
+{
+	if(tree == NULL || tree->size == 0)
+		return;
+	verif_rb_node(tree,tree->root);
+}
 
 void static rbnode_set_red(c_rb_node_t *rbnode)
 {
@@ -27,18 +64,17 @@ void static rbnode_set_red(c_rb_node_t *rbnode)
 		return;
 	rbnode->color = RED;
 }
-
 void static rbnode_set_black(c_rb_node_t *rbnode)
 {
 	if(rbnode == NULL)
 		return;
 	rbnode->color = BLACK;
 }
-static  rbnode_is_red(c_rb_node_t *rbnode)
+static  int rbnode_is_red(c_rb_node_t *rbnode)
 {
 	return rbnode == NULL ? 0:(rbnode->color == RED);
 }
-static  rbnode_is_black(c_rb_node_t *rbnode)
+static  int rbnode_is_black(c_rb_node_t *rbnode)
 {
 	return rbnode == NULL ? 1:(rbnode->color == BLACK);
 }
@@ -59,14 +95,18 @@ c_rb_node_t* c_rb_subtree_min(c_rb_node_t *node)
 
 	if(node->left != NULL)
 		node = node->left;
+
+	return node;
 }
 
-c_rb_node_t* c_rb_subtree_max(c_rb_node_t *node){
+c_rb_node_t* c_rb_subtree_max(c_rb_node_t *node)
+{
 	if(node == NULL)
 		return NULL;
 
 	if(node->right != NULL)
 		node = node->right;
+	return node;
 }
 static void free_node(c_rb_node_t *node)
 {
@@ -331,17 +371,18 @@ int c_rbtree_insert(c_rb_tree_t *tree,void *key,void *value)
 	int comp = 0;
 
 	if(tree == NULL || key == NULL)
-		return 0;
+		return -1;
 
 	new = (c_rb_node_t *)malloc(sizeof(c_rb_node_t));
 	if(new == NULL){
 		printf("malloc new node failed \n");
-		return 0;
+		return -1;
 	}
 
 	new->color = RED;
 	new->key = key;
 	new->value = value;
+	tree->size++;
 
 	if(tree->root == NULL){/* rbtree is empty */
 		new->color = BLACK;
@@ -353,7 +394,7 @@ int c_rbtree_insert(c_rb_tree_t *tree,void *key,void *value)
 			comp = tree->compare(index->key,new->key);
 			if(comp == 0){
 				free(new);
-				return 1;
+				return 0;
 			}else if( comp < 0 ){/* index < new*/
 				if(index->right == NULL){
 					index->right = new;
@@ -378,7 +419,8 @@ int c_rbtree_insert(c_rb_tree_t *tree,void *key,void *value)
 	if(rbnode_is_red(new->parent))
 		insert_fixup(tree,new);
 
-	return 1;
+	verif_rb_tree(tree);
+	return 0;
 }
 /*case 1
  *   A brother is red
@@ -387,21 +429,21 @@ int c_rbtree_insert(c_rb_tree_t *tree,void *key,void *value)
  *                                  
  *        (+) B                         (+) D
  *      /     \                       /     \
- *  A (+)     (-) D               B (-)      (+) F 
+ *  A (+)     (-) D               B (-)      (+) E 
  *	  / \     /  \                 /   \
- *         E (+) (+) F        A  (+)    (+) C
+ *         C (+) (+) E        A  (+)    (+) C
  *
  *
  *case 2
  *   A brother D is black,
  *   and D left child and right child is black
- *   set A parent red,send new parent = B 
+ *   set A parent(B) red,send new parent = B 
  *                                  
- *        (+-) B                       (+-) B
+ *        (+-) B                       (-) B
  *      /     \                       /     \
  *  A (+)     (+) D               A (+)      (+) D 
  *	  / \     /  \                          /   \
- *         E (+) (+) F                  A (+)    (+) C
+ *         C (+) (+) E                  C (+)    (+) E
  *
  *
  *case 3
@@ -411,11 +453,11 @@ int c_rbtree_insert(c_rb_tree_t *tree,void *key,void *value)
  *                                  
  *        (+-) B                        (+-) B
  *      /     \                       /     \
- *  A (+)     (-) D               A (+)      (+) E 
+ *  A (+)     (+) D               A (+)      (+) C 
  *	  / \     /  \                          /   \
- *        E (-)  (+) F                          (-) D
+ *        C (-)  (+) E                          (-) D
  *                                              /  \
- *                                                  (+) F
+ *                                                  (+) E
  *
  *case 4
  *   A brother D is black,
@@ -424,9 +466,9 @@ int c_rbtree_insert(c_rb_tree_t *tree,void *key,void *value)
  *                                  
  *        (+-) B                        (+-) D
  *      /     \                       /     \
- *  A (+)     (+) D               B (+)      (-) F 
+ *  A (+)     (+) D               B (+)      (-) E
  *	  / \     /  \                  /  \
- *        E (+-) (-) F          A (+)  E(+-)          
+ *         c(+-) (-) E          A (+)  C(+-)          
  *                                              
  *                                            
  */
@@ -541,7 +583,7 @@ static void _remove(c_rb_tree_t *rbtree,c_rb_node_t *node)
 		{
 			free(node);
 			rbtree->size--;
-#if DEBUG
+#ifdef DEBUG
 			assert(rbtree->size == 0);
 #endif
 			return;
@@ -563,6 +605,8 @@ static void _remove(c_rb_tree_t *rbtree,c_rb_node_t *node)
 
 	if(color == BLACK)
 		remove_fixup(rbtree,x);
+
+	verif_rb_tree(rbtree);
 
 }
 void c_rbtree_remove1(c_rb_tree_t *rbtree,void const *key,void **rkey,void **rvalue)
