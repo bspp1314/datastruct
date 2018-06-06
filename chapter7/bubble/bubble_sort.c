@@ -9,7 +9,7 @@
  * 最坏的时间O(n2)
  * 平均的时间O(n2)
  */
-void insert_sort(int *array,int len)
+void bubble_sort(int *array,int len)
 {
 	int i = 0 ;
 	int j = 0 ;
@@ -29,10 +29,15 @@ void insert_sort(int *array,int len)
 }
 
 int main(){
-
 	int array[10] = {87,45,34,23,34,5,4,3,2,1};
-	insert_sort(array,10);
+	printf("befor bubble sort :\n");
 	for(int i = 0;i < 10 ; i++)
-		printf("array[%d] = %d\n",i,array[i]);
+		printf(" %5d ",array[i]);
+	printf("\n");
+	bubble_sort(array,10);
+	printf("After bubble sort :\n");
+	for(int i = 0;i < 10 ; i++)
+		printf(" %5d ",array[i]);
+	printf("\n");
 	
 }
