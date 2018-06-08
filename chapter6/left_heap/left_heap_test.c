@@ -36,7 +36,7 @@ int main(){
 		return -1;
 
 	int p0 = 1;;
-	int p1 = 2;
+	int p1 = 1;
 	int p2 = 3;
 	int p3 = 4;
 	int p4 = 5;

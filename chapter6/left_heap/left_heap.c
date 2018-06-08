@@ -245,7 +245,10 @@ c_left_heap_t *c_merge_left_heap(c_left_heap_t *h1,c_left_heap_t *h2)
 
 	h1->root = merge_left(h1->root,h2->root,h1->compare);
 	h1->size += h2->size;
-	free(h2);
+
+	h2->root = NULL;
+	h2->size = 0;
+
 	return h1;
 }
 void c_left_heap_remove(c_left_heap_t *heap)

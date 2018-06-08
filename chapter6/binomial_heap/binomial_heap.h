@@ -1,10 +1,18 @@
 #ifndef BINOMIAL_HEAP
 #define BINOMIAL_HEAP
-typedef struct binomial_heap{
+typedef struct heap_node{
 	void *key;
 	int degree;
-	struct binomial_heap *left // parent 
-  struct binomial_heap *parent;
-	struct binomial_heap *next;
-}binomial_heap_t;
+	struct heap_node *left; 
+  struct heap_node *parent;
+	struct heap_node *next;
+}heap_node_t;
+
+typedef struct c_binomial_heap{
+	long size;
+	int (* compare)(const void *,const void *);
+	heap_node_t *root;
+}c_binomial_heap_t;
+
+
 #endif
