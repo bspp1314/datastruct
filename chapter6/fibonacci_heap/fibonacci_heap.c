@@ -11,10 +11,6 @@
 
 /* 插入节点到一个堆中，直接将该节点插入根链表min节点之前即可,重置min节点。
  *
- *
- *
- *
- *
  */
 #define LOG2(x) ((log((double)(x))) / (log(2.0)))
 static fibonacci_node_t* create_node(void *key)
@@ -465,7 +461,6 @@ static void fibonacci_node_increate(c_fibonacci_heap_t *heap,fibonacci_node_t *n
 		fibonacci_node_cut(heap,node,parent);
 		fibonacci_node_cascading_cut(heap,parent);
 	}
-
 }
 void fibonacci_node_update(c_fibonacci_heap_t *heap,void *oldkey,void *newkey)
 {
@@ -486,14 +481,11 @@ void fibonacci_node_update(c_fibonacci_heap_t *heap,void *oldkey,void *newkey)
 		 if(heap->compare(oldkey,newkey) < 0)
 		 {
 			 //increae
+			 fibonacci_node_decreate(heap,node,newkey);
 		 }else
 		 {
 			 //decreae
+			 fibonacci_node_increate(heap,node,newkey);
 		 }
 	 }
-}
-
-int main()
-{
-	return 0;
 }
