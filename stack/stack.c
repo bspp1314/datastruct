@@ -125,5 +125,3 @@ node_t *c_get_stack_tail(stack_t *stack)
 		return NULL;
 	return stack->tail->pre;
 }
-
-

@@ -305,7 +305,7 @@ int c_avl_insert(c_avl_tree_t *avl_tree,void *key,void *value)
 	if( (new = (c_avl_node_t *)malloc(sizeof(c_avl_node_t))) == NULL)
 	{
 		printf("malloc c_avl_node_t failed \n");
-		return;
+		return 1;
 	}
 
 	new->key = key;
