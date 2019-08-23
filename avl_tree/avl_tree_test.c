@@ -3,6 +3,7 @@
 #include<string.h>
 #include<malloc.h>
 #include<time.h>
+
 int compare(int *a,int *b){
 	if( *((int*)a) == *((int *)b)  )
 	{
@@ -20,28 +21,29 @@ int compare(int *a,int *b){
 }
 int main(){
 	c_avl_tree_t *data_sets;
+	c_avl_node_t *node;
 	int i = 0;
-	struct timeval  start,end;
-	long iTimeInterval;
+    time_t start;
+    time_t end;
 
+    time(&start);
 	data_sets = c_avl_create((int(*)(const void *,const void *))compare);
 	if(data_sets == NULL)
 		return -1;
 
-	for(i = 0;i < 10000;i++)
+	for(i = 0;i < 10;i++)
 	{
 		int *p = (int *)malloc(sizeof(int));
-		*p = i;
+		*p = i+1;
 		c_avl_insert(data_sets,(void*)p,NULL);
 	}
 	printf("root value is %d\n",*((int *)data_sets->root->key));
+	printf("root value is %d\n",*((int *)data_sets->root->left->key));
+	printf("root value is %d\n",*((int *)data_sets->root->right->key));
 	
-	int *p;
-	while(c_avl_pick(data_sets,(void **)&p,NULL) == 0)
-	{
-		free(p);
-	}
-	c_avl_destroy(data_sets);
+	c_avl_destroy(data_sets,1,0);
+    time(&end);
+    printf("need time :%ld",end-start);
 	return 0;
 
 }
