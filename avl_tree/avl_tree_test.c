@@ -40,7 +40,7 @@ int main(){
 	printf("root value is %d\n",*((int *)data_sets->root->key));
 	printf("root value is %d\n",*((int *)data_sets->root->left->key));
 	printf("root value is %d\n",*((int *)data_sets->root->right->key));
-	
+	printf("=======================================\n");
 	c_avl_destroy(data_sets,1,0);
     time(&end);
     printf("need time :%ld",end-start);

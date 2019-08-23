@@ -28,7 +28,6 @@ static void verify_node(c_avl_node_t *avl_node)
 }
 static void verify_tree(c_avl_tree_t *avl_tree)
 {
-    printf("verify_tree\n");
     if( avl_tree == NULL )
         return;
 
@@ -43,13 +42,15 @@ static void free_node(c_avl_node_t *avl_node,int free_key ,int free_value)
     free_node(avl_node->left,free_key,free_value);
     free_node(avl_node->right,free_key,free_value);
 
-    free(avl_node);
     if(free_key) {
         free(avl_node->key);
     }
+
     if(free_value){
         free(avl_node->value);
     }
+
+    free(avl_node);
     avl_node = NULL;
 }
 
@@ -344,7 +345,7 @@ int c_avl_insert(c_avl_tree_t *avl_tree,void *key,void *value)
     index = avl_tree->root;
 
     while(1){
-        comp = avl_tree->compare(index->key,new->key);
+        comp = avl_tree->compare(index->key,key);
         if(comp == 0){
             //update value 
             index->value = value;
@@ -591,7 +592,8 @@ c_avl_iterator_t *c_avl_get_iterator(c_avl_tree_t *avl_tree)
 
     return iter;
 
-} /* 迭代器 */
+}
+/* 迭代器 */
 int c_avl_iterator_next(c_avl_iterator_t *iter, void **key, void **value) 
 {
     c_avl_node_t *node;

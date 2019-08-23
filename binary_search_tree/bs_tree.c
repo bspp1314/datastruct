@@ -219,6 +219,7 @@ int c_bs_tree_insert(c_bs_tree_t *bs_tree,void *key,void *value)
             int comp = bs_tree->compare(index->key,key);
             if (comp == 0 ){
                 index->value = value;
+                return 0;
             }else {
                 if (comp < 0 ){//left < right 
                     if(index->right == NULL){
