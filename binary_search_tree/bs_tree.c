@@ -131,6 +131,8 @@ void  c_bs_tree_remove(c_bs_tree_t *bs_tree,const void *key,void **rkey,void **r
 
     if(rkey != NULL){
         *rkey = node->key;
+    }
+    if(rvalue != NULL){
         *rvalue = node->value;
     }
     bs_tree->size--;
@@ -175,21 +177,15 @@ static void remove_node(c_bs_tree_t *bs_tree,c_bs_node_t *node)
     }else if (left == NULL){
         replace = node->right;
     }else{
-        printf("find right_min \n");
         //右子树的最小值
         c_bs_node_t *min = min_node(node->right);
         bs_tree->print_key_func(min->key);
-        printf("\n end right_min %p \n",min);
         //重设right_min parent的左子树为right_min的右子树
         min->parent->left = min->right;
-        printf("\n end right_min2 %p \n",min);
 
         min->parent = node->parent;
-        printf("\n end right_min3 %p \n",min);
         min->left = node->left;
-        printf("\n end right_min4 %p \n",min);
         min->right = node->right;
-        printf("\n end right_min5 %p \n",min);
         replace = min;
     }
 
@@ -200,7 +196,6 @@ static void remove_node(c_bs_tree_t *bs_tree,c_bs_node_t *node)
     }else{
         parent->right = replace;
     }
-    printf("\n end right_min6 %p \n",replace);
 }
 
 
