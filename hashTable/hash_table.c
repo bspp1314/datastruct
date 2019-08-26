@@ -8,7 +8,7 @@
 #include<malloc.h>
 #include<string.h>
 
-#include"hash_sep.h"
+#include"hash_table.h"
 LIST_S *list_create(int (*compare)(const void *,const void *))
 {
 	LIST_S *list = NULL;

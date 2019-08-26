@@ -4,8 +4,8 @@
 #define MIN_TABLE_SIZE 10
 struct list_node
 {
-	int key;
-	int  value;
+	void *key;
+	void *value;
 	struct list_node *next;
 };
 typedef struct list_node LIST_NODE_S;
