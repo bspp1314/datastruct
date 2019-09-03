@@ -1,7 +1,7 @@
 #include<stdlib.h>
 #include"heap.h"
 #include<string.h>
-#include<malloc.h>
+#include<sys/malloc.h>
 #include<time.h>
 int compare(const void *a,const void *b){
 	if( *((int*)a) == *((int *)b)  )

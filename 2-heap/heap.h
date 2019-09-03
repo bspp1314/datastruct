@@ -1,5 +1,5 @@
 #ifndef HEAP_H
-#define HEAP
+#define HEAP_H 
 typedef struct node{	
 	void *value;
 	void *key;

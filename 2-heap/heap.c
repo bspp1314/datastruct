@@ -1,4 +1,6 @@
-#include<malloc.h>
+//#include<malloc.h>
+#include <sys/malloc.h>
+#include<stdio.h>
 #include"heap.h"
 /* 2 叉堆得性质
  * 2 叉堆是一个完成2叉树
@@ -49,11 +51,12 @@ void *c_heap_destroy(heap_t *heap)
 static void insert_fixup(heap_t *heap,int index)
 {
 	int c = index;
+    //父节点
 	int p = (c -1) >> 1;
 	node_t temp = heap->nodes[c];
 
 	while(c > 0)
-	{
+	{   //是否比父节点大交换
 		if(heap->compare(heap->nodes[p].key,temp.key) > 0)
 			break;
 		else
@@ -83,7 +86,7 @@ int c_heap_insert(heap_t *heap,void *key,void *value)
 	heap->size++;
 	return 0;
 }
-
+//获取key值得位置
 static int get_index(heap_t *heap,void *key)
 {
  int index  = -1;
@@ -100,6 +103,7 @@ static int get_index(heap_t *heap,void *key)
 
 	return index;
 }
+//index 要删除节点的位置 end 二叉树尾部
 static void remove_fixup(heap_t *heap,int index,int end)
 {
 	int c = index;/*cureent node*/
@@ -108,9 +112,10 @@ static void remove_fixup(heap_t *heap,int index,int end)
 
 	while(l <= end)
 	{
+        //left < right 
 		if(l < end && heap->compare(heap->nodes[l].key,heap->nodes[l+1].key) < 0)
 			l++;
-
+        //左右子树都比当前的节点小
 		if(heap->compare(temp.key,heap->nodes[l].key) >= 0)
 			break;
 		else
@@ -141,9 +146,9 @@ int c_heap_remove(heap_t *heap,void *key,void **rkey,void **rvalue)
 
 		if(rvalue != NULL)
 			*rvalue = heap->nodes[index].value;
-
+        //用最后的一个元素填充
 		heap->nodes[index] = heap->nodes[--heap->size];
-		remove_fixup(heap,index,--heap->size);
+		remove_fixup(heap,index,heap->size-1);
 		return 0;
 }
 
